@@ -126,7 +126,7 @@ struct WelcomeView: View {
                 )
 
                 UseCaseRow(
-                    icon: "restart.circle",
+                    icon: "power.circle",
                     title: "Launch at Login",
                     detail: "Start Code Awake automatically and keep it ready in the menu bar."
                 )

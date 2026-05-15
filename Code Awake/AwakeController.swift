@@ -10,10 +10,14 @@ import Combine
 import IOKit.pwr_mgt
 
 final class AwakeController: ObservableObject {
-    @Published private(set) var isEnabled = false
+    @Published private(set) var keepAwakeEnabled = false
     @Published private(set) var errorMessage: String?
 
-    private let defaultsKey = "keepAwakeEnabled"
+    var isEnabled: Bool {
+        keepAwakeEnabled
+    }
+
+    private let keepAwakeDefaultsKey = "keepAwakeEnabled"
     private var assertionIDs: [IOPMAssertionID] = []
     private let assertions: [(type: String, reason: CFString)] = [
         (kIOPMAssertionTypePreventSystemSleep, "Code Awake - Prevent system sleep" as CFString),
@@ -23,9 +27,8 @@ final class AwakeController: ObservableObject {
     ]
 
     init() {
-        if UserDefaults.standard.bool(forKey: defaultsKey) {
-            setEnabled(true)
-        }
+        keepAwakeEnabled = UserDefaults.standard.bool(forKey: keepAwakeDefaultsKey)
+        _ = updateAssertions()
     }
 
     deinit {
@@ -33,18 +36,26 @@ final class AwakeController: ObservableObject {
     }
 
     @discardableResult
-    func setEnabled(_ isEnabled: Bool) -> Bool {
+    func setKeepAwakeEnabled(_ isEnabled: Bool) -> Bool {
+        keepAwakeEnabled = isEnabled
+        UserDefaults.standard.set(isEnabled, forKey: keepAwakeDefaultsKey)
+        return updateAssertions()
+    }
+
+    private func updateAssertions() -> Bool {
         if isEnabled {
             let didCreateAssertions = createAssertions()
-            self.isEnabled = didCreateAssertions
-            UserDefaults.standard.set(didCreateAssertions, forKey: defaultsKey)
+
+            if !didCreateAssertions {
+                keepAwakeEnabled = false
+                UserDefaults.standard.set(false, forKey: keepAwakeDefaultsKey)
+            }
+
             return didCreateAssertions
         }
 
         releaseAssertions()
         errorMessage = nil
-        self.isEnabled = false
-        UserDefaults.standard.set(false, forKey: defaultsKey)
         return true
     }
 

@@ -53,12 +53,12 @@ private struct CodeAwakeMenuPanel: View {
     let quitAction: () -> Void
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 7) {
             MenuToggleRow(
-                isEnabled: awakeController.isEnabled,
+                isEnabled: awakeController.keepAwakeEnabled,
                 title: "Keep Mac Awake",
-                icon: awakeController.isEnabled ? "cup.and.saucer.fill" : "cup.and.saucer",
-                action: { awakeController.setEnabled(!awakeController.isEnabled) }
+                icon: awakeController.keepAwakeEnabled ? "cup.and.saucer.fill" : "cup.and.saucer",
+                action: { awakeController.setKeepAwakeEnabled(!awakeController.keepAwakeEnabled) }
             )
 
             if let errorMessage = awakeController.errorMessage {
@@ -71,7 +71,7 @@ private struct CodeAwakeMenuPanel: View {
             MenuToggleRow(
                 isEnabled: launchAtLoginController.isEnabled,
                 title: "Launch at Login",
-                icon: "restart.circle",
+                icon: "power.circle",
                 action: { launchAtLoginController.setEnabled(!launchAtLoginController.isEnabled) }
             )
 
@@ -82,8 +82,8 @@ private struct CodeAwakeMenuPanel: View {
             MenuActionRow(title: "Buy Me a Coffee", icon: "cup.and.saucer", action: donateAction)
             MenuActionRow(title: "Quit Code Awake", icon: "power", action: quitAction)
         }
-        .padding(12)
-        .frame(width: 286)
+        .padding(9)
+        .frame(width: 268)
         .background(
             LinearGradient(
                 colors: [
@@ -105,24 +105,26 @@ private struct MenuToggleRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: 9) {
                 Image(systemName: icon)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(isEnabled ? Color(red: 1.0, green: 0.62, blue: 0.52) : .white.opacity(0.70))
-                    .frame(width: 24)
+                    .frame(width: 20)
 
                 Text(title)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
 
-                Spacer(minLength: 16)
+                Spacer(minLength: 12)
 
                 AwakeSwitch(isEnabled: isEnabled)
             }
-            .padding(.horizontal, 12)
-            .frame(height: 44)
+            .padding(.horizontal, 9)
+            .frame(height: 36)
             .background(.white.opacity(isEnabled ? 0.08 : 0.04))
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .buttonStyle(.plain)
     }
@@ -151,11 +153,11 @@ private struct AwakeSwitch: View {
 
             Circle()
                 .fill(.white)
-                .frame(width: 18, height: 18)
+                .frame(width: 14, height: 14)
                 .padding(3)
                 .shadow(color: .black.opacity(0.16), radius: 2, x: 0, y: 1)
         }
-        .frame(width: 46, height: 24)
+        .frame(width: 36, height: 20)
     }
 }
 
@@ -166,20 +168,20 @@ private struct MenuActionRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: 9) {
                 Image(systemName: icon)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.70))
-                    .frame(width: 24)
+                    .frame(width: 20)
 
                 Text(title)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.92))
 
                 Spacer()
             }
-            .padding(.horizontal, 12)
-            .frame(height: 38)
+            .padding(.horizontal, 9)
+            .frame(height: 31)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -195,10 +197,10 @@ private struct MenuErrorText: View {
 
     var body: some View {
         Text(message)
-            .font(.system(size: 12, weight: .medium))
+            .font(.system(size: 11, weight: .medium))
             .foregroundStyle(Color(red: 1.0, green: 0.65, blue: 0.56))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 9)
     }
 }
 
