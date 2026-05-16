@@ -11,6 +11,8 @@ import IOKit.pwr_mgt
 
 final class AwakeController: ObservableObject {
     @Published private(set) var keepAwakeEnabled = false
+    @Published private(set) var keepAwakeOffTimerMinutes = 0
+    @Published private(set) var keepAwakeRemainingSeconds = 0
     @Published private(set) var errorMessage: String?
 
     var isEnabled: Bool {
@@ -18,7 +20,10 @@ final class AwakeController: ObservableObject {
     }
 
     private let keepAwakeDefaultsKey = "keepAwakeEnabled"
+    private let keepAwakeOffTimerDefaultsKey = "keepAwakeOffTimerMinutes"
+    static let offTimerOptions = [0, 30, 60, 120, 180, 240, 360, 480, 720]
     private var assertionIDs: [IOPMAssertionID] = []
+    private var offTimer: Timer?
     private let assertions: [(type: String, reason: CFString)] = [
         (kIOPMAssertionTypePreventSystemSleep, "Code Awake - Prevent system sleep" as CFString),
         (kIOPMAssertPreventUserIdleSystemSleep, "Code Awake - Prevent idle system sleep" as CFString),
@@ -28,11 +33,13 @@ final class AwakeController: ObservableObject {
 
     init() {
         keepAwakeEnabled = UserDefaults.standard.bool(forKey: keepAwakeDefaultsKey)
+        keepAwakeOffTimerMinutes = UserDefaults.standard.integer(forKey: keepAwakeOffTimerDefaultsKey)
         _ = updateAssertions()
     }
 
     deinit {
         releaseAssertions()
+        cancelOffTimer()
     }
 
     @discardableResult
@@ -42,6 +49,16 @@ final class AwakeController: ObservableObject {
         return updateAssertions()
     }
 
+    func setKeepAwakeOffTimerMinutes(_ minutes: Int) {
+        let clampedMinutes = max(0, minutes)
+        keepAwakeOffTimerMinutes = clampedMinutes
+        UserDefaults.standard.set(clampedMinutes, forKey: keepAwakeOffTimerDefaultsKey)
+
+        if keepAwakeEnabled {
+            scheduleOffTimer()
+        }
+    }
+
     private func updateAssertions() -> Bool {
         if isEnabled {
             let didCreateAssertions = createAssertions()
@@ -49,12 +66,18 @@ final class AwakeController: ObservableObject {
             if !didCreateAssertions {
                 keepAwakeEnabled = false
                 UserDefaults.standard.set(false, forKey: keepAwakeDefaultsKey)
+                cancelOffTimer()
+            }
+
+            if didCreateAssertions {
+                scheduleOffTimer()
             }
 
             return didCreateAssertions
         }
 
         releaseAssertions()
+        cancelOffTimer()
         errorMessage = nil
         return true
     }
@@ -87,5 +110,36 @@ final class AwakeController: ObservableObject {
     private func releaseAssertions() {
         assertionIDs.forEach { IOPMAssertionRelease($0) }
         assertionIDs.removeAll()
+    }
+
+    private func scheduleOffTimer() {
+        cancelOffTimer()
+
+        guard keepAwakeEnabled, keepAwakeOffTimerMinutes > 0 else {
+            keepAwakeRemainingSeconds = 0
+            return
+        }
+
+        keepAwakeRemainingSeconds = keepAwakeOffTimerMinutes * 60
+        offTimer = Timer.scheduledTimer(
+            withTimeInterval: 1,
+            repeats: true
+        ) { [weak self] _ in
+            guard let self else {
+                return
+            }
+
+            self.keepAwakeRemainingSeconds -= 1
+
+            if self.keepAwakeRemainingSeconds <= 0 {
+                _ = self.setKeepAwakeEnabled(false)
+            }
+        }
+    }
+
+    private func cancelOffTimer() {
+        offTimer?.invalidate()
+        offTimer = nil
+        keepAwakeRemainingSeconds = 0
     }
 }

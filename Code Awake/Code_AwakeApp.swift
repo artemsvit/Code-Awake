@@ -65,6 +65,18 @@ private struct CodeAwakeMenuPanel: View {
                 MenuErrorText(errorMessage)
             }
 
+            MenuTimerRow(
+                title: "Auto Turn Off",
+                icon: "timer",
+                isKeepAwakeEnabled: awakeController.keepAwakeEnabled,
+                selectedMinutes: awakeController.keepAwakeOffTimerMinutes,
+                remainingSeconds: awakeController.keepAwakeRemainingSeconds,
+                options: AwakeController.offTimerOptions,
+                action: { selectedMinutes in
+                    awakeController.setKeepAwakeOffTimerMinutes(selectedMinutes)
+                }
+            )
+
             Divider()
                 .overlay(.white.opacity(0.10))
 
@@ -185,6 +197,107 @@ private struct MenuActionRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+private struct MenuTimerRow: View {
+    let title: String
+    let icon: String
+    let isKeepAwakeEnabled: Bool
+    let selectedMinutes: Int
+    let remainingSeconds: Int
+    let options: [Int]
+    let action: (Int) -> Void
+
+    var body: some View {
+        Menu {
+            ForEach(options, id: \.self) { minutes in
+                Button(action: { action(minutes) }) {
+                    Text(self.optionLabel(for: minutes))
+                }
+            }
+        } label: {
+            HStack(spacing: 9) {
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.72))
+                    .frame(width: 20)
+
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+
+                Spacer(minLength: 12)
+
+                Text(statusLabel)
+                    .font(.system(size: 12, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(.white.opacity(0.86))
+                    .lineLimit(1)
+
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.60))
+            }
+            .padding(.horizontal, 9)
+            .frame(height: 32)
+        }
+        .buttonStyle(.plain)
+        .menuStyle(.button)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var statusLabel: String {
+        guard isKeepAwakeEnabled, remainingSeconds > 0 else {
+            return shortLabel(for: selectedMinutes)
+        }
+
+        return countdownLabel(for: remainingSeconds)
+    }
+
+    private func optionLabel(for minutes: Int) -> String {
+        guard minutes > 0 else {
+            return "Infinity"
+        }
+
+        return "After \(durationLabel(for: minutes))"
+    }
+
+    private func shortLabel(for minutes: Int) -> String {
+        guard minutes > 0 else {
+            return "Infinity"
+        }
+
+        return durationLabel(for: minutes)
+    }
+
+    private func countdownLabel(for seconds: Int) -> String {
+        let hours = max(0, seconds) / 3600
+        let minutes = (max(0, seconds) % 3600) / 60
+        let remainingSeconds = max(0, seconds) % 60
+
+        if hours > 0 {
+            return "\(hours):\(String(format: "%02d", minutes)):\(String(format: "%02d", remainingSeconds))"
+        }
+
+        return "\(minutes):\(String(format: "%02d", remainingSeconds))"
+    }
+
+    private func durationLabel(for minutes: Int) -> String {
+        guard minutes >= 60 else {
+            return "\(minutes) min"
+        }
+
+        let hours = minutes / 60
+        let remainingMinutes = minutes % 60
+
+        if remainingMinutes == 0 {
+            return "\(hours)h"
+        }
+
+        return "\(hours)h \(remainingMinutes)m"
     }
 }
 
