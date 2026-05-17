@@ -279,7 +279,7 @@ h1 {
   font-weight: 820;
   line-height: 1;
   cursor: default;
-  transition: background 160ms ease, transform 160ms ease;
+  transition: background 160ms ease, transform 160ms ease, opacity 180ms ease, visibility 180ms ease;
 }
 
 .menubar-icon.active {
@@ -311,6 +311,13 @@ button.menubar-icon:focus-visible {
 
 .mac-content:not(.is-menu-open) .menubar-icon.active::before {
   opacity: 0;
+}
+
+.mac-content.is-app-quit .menubar-icon.active {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(0.84);
 }
 
 .menubar-icon svg {
@@ -788,17 +795,22 @@ h2 {
   line-height: 1.45;
 }
 
-.steps-list span {
+.step-icon {
   width: 50px;
   height: 50px;
   display: grid;
   place-items: center;
-  border-radius: 999px;
-  background: linear-gradient(135deg, rgba(214, 125, 235, 0.22), rgba(250, 199, 147, 0.18));
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  color: var(--peach);
-  font-size: 15px;
-  font-weight: 860;
+  color: #f1b48d;
+}
+
+.step-icon svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .download-band {
@@ -1467,7 +1479,8 @@ h2 {
 
   .mac-menubar {
     height: 40px;
-    gap: clamp(7px, 2.2vw, 11px);
+    gap: 12px;
+    --menubar-active-pad: 10px;
     transform: none;
   }
 
@@ -1501,7 +1514,7 @@ h2 {
     gap: 10px;
     border-radius: 14px;
     padding: 0 12px;
-    font-size: clamp(13px, 4vw, 16px);
+    font-size: 15px;
   }
 
   .app-menu-action {
@@ -1523,7 +1536,7 @@ h2 {
   .app-timer-options button {
     min-height: 36px;
     padding-inline: 24px;
-    font-size: clamp(13px, 4vw, 16px);
+    font-size: 15px;
   }
 
   .app-menu-divider {
@@ -1677,6 +1690,11 @@ h2 {
     aspect-ratio: 1 / 1.12;
   }
 
+  .mac-menubar {
+    gap: 10px;
+    --menubar-active-pad: 8px;
+  }
+
   .app-menu-card {
     margin-top: 4px;
     padding: 10px;
@@ -1688,7 +1706,7 @@ h2 {
     grid-template-columns: 30px 1fr 48px;
     gap: 8px;
     padding: 0 10px;
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .app-menu-action {
@@ -1711,7 +1729,7 @@ h2 {
   .app-timer-options button {
     min-height: 34px;
     padding-inline: 18px;
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .app-menu-symbol svg {
