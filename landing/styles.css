@@ -175,7 +175,7 @@ h1 {
 }
 
 .primary-button {
-  color: #181018;
+  color: #532f53;
   background: linear-gradient(90deg, var(--pink), var(--peach));
   box-shadow: 0 18px 40px rgba(214, 125, 235, 0.22);
 }
