@@ -448,8 +448,13 @@ button.app-menu-action:focus-visible {
   color: var(--coral);
 }
 
+.app-menu-setting.is-timer-active .app-menu-symbol-muted {
+  color: var(--coral);
+}
+
 .app-menu-value {
   color: rgba(255, 255, 255, 0.78);
+  font-size: inherit;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -1743,7 +1748,7 @@ h2 {
   }
 
   .app-menu-value {
-    font-size: 11px;
+    font-size: inherit;
   }
 
   .app-switch {

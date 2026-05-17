@@ -133,7 +133,7 @@ private struct MenuToggleRow: View {
             HStack(spacing: 9) {
                 Image(systemName: icon)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.70))
+                    .foregroundStyle(iconColor)
                     .frame(width: 20)
 
                 Text(title)
@@ -151,6 +151,10 @@ private struct MenuToggleRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    private var iconColor: Color {
+        isEnabled ? Color(red: 1.0, green: 0.62, blue: 0.52) : .white.opacity(0.70)
     }
 }
 
@@ -221,6 +225,10 @@ private struct MenuTimerRow: View {
     let options: [Int]
     let action: (Int) -> Void
 
+    private var hasActiveTimer: Bool {
+        selectedMinutes > 0
+    }
+
     var body: some View {
         Menu {
             ForEach(options, id: \.self) { minutes in
@@ -232,7 +240,7 @@ private struct MenuTimerRow: View {
             HStack(spacing: 9) {
                 Image(systemName: icon)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.72))
+                    .foregroundStyle(hasActiveTimer ? Color(red: 1.0, green: 0.62, blue: 0.52) : .white.opacity(0.72))
                     .frame(width: 20)
 
                 Text(title)
@@ -244,7 +252,7 @@ private struct MenuTimerRow: View {
                 Spacer(minLength: 12)
 
                 Text(statusLabel)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .monospacedDigit()
                     .foregroundStyle(.white.opacity(0.86))
                     .lineLimit(1)

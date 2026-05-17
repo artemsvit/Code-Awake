@@ -123,6 +123,8 @@ const updateTimerLabel = () => {
     return;
   }
 
+  timerButton?.classList.toggle("is-timer-active", selectedTimerMinutes > 0);
+
   if (keepAwakeInput?.checked && remainingTimerSeconds > 0) {
     timerValue.textContent = countdownLabel(remainingTimerSeconds);
     return;
