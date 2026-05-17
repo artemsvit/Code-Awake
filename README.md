@@ -26,14 +26,6 @@ The app uses public Apple power-management APIs and Sparkle for direct-distribut
 | Launch at Login | Starts Code Awake with macOS so the menu bar control is ready. |
 | Sparkle Updates | Built-in update checks through a signed Sparkle appcast. |
 
-## Menu Bar Design
-
-<p align="center">
-  <img src="landing/assets/app-menu-preview.png" alt="Code Awake menu preview" width="520">
-</p>
-
-The interface is intentionally small: one menu bar icon, a native-feeling awake toggle, launch-at-login control, auto turn-off options, update check, donation link, and quit action.
-
 ## Installation
 
 1. Download the latest DMG from the release page.
