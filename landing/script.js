@@ -7,9 +7,12 @@ const timerOptions = document.querySelector(".app-timer-options");
 const timerValue = document.querySelector(".app-menu-value");
 const timerOptionButtons = document.querySelectorAll(".app-timer-options button");
 const updateButton = document.querySelector(".app-update-action");
+const quitButton = document.querySelector(".app-quit-action");
 let selectedTimerMinutes = 0;
 let remainingTimerSeconds = 0;
 let timerInterval;
+let menuBootTimeout;
+let quitReplayTimeout;
 
 if ("scrollRestoration" in history) {
   history.scrollRestoration = "manual";
@@ -54,10 +57,27 @@ if (menuToggle && macContent) {
     menuToggle.setAttribute("aria-expanded", String(isOpen));
   };
 
-  window.setTimeout(() => setMenuOpen(true), 520);
+  menuBootTimeout = window.setTimeout(() => setMenuOpen(true), 520);
 
   menuToggle.addEventListener("click", () => {
+    if (macContent.classList.contains("is-app-quit")) {
+      return;
+    }
+
     setMenuOpen(!macContent.classList.contains("is-menu-open"));
+  });
+
+  quitButton?.addEventListener("click", () => {
+    window.clearTimeout(menuBootTimeout);
+    window.clearTimeout(quitReplayTimeout);
+    closeTimerOptions();
+    setMenuOpen(false);
+    macContent.classList.add("is-app-quit");
+
+    quitReplayTimeout = window.setTimeout(() => {
+      macContent.classList.remove("is-app-quit");
+      setMenuOpen(true);
+    }, 3000);
   });
 }
 
