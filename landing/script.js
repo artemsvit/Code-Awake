@@ -6,6 +6,7 @@ const timerButton = document.querySelector(".app-menu-setting");
 const timerOptions = document.querySelector(".app-timer-options");
 const timerValue = document.querySelector(".app-menu-value");
 const timerOptionButtons = document.querySelectorAll(".app-timer-options button");
+const updateButton = document.querySelector(".app-update-action");
 let selectedTimerMinutes = 0;
 let remainingTimerSeconds = 0;
 let timerInterval;
@@ -48,9 +49,15 @@ if ("IntersectionObserver" in window) {
 }
 
 if (menuToggle && macContent) {
-  menuToggle.addEventListener("click", () => {
-    const isOpen = macContent.classList.toggle("is-menu-open");
+  const setMenuOpen = (isOpen) => {
+    macContent.classList.toggle("is-menu-open", isOpen);
     menuToggle.setAttribute("aria-expanded", String(isOpen));
+  };
+
+  window.setTimeout(() => setMenuOpen(true), 520);
+
+  menuToggle.addEventListener("click", () => {
+    setMenuOpen(!macContent.classList.contains("is-menu-open"));
   });
 }
 
@@ -166,6 +173,12 @@ keepAwakeInput?.addEventListener("change", () => {
   }
 
   stopTimer();
+});
+
+updateButton?.addEventListener("click", () => {
+  updateButton.classList.remove("is-spinning");
+  void updateButton.offsetWidth;
+  updateButton.classList.add("is-spinning");
 });
 
 document.addEventListener("click", closeTimerOptions);
