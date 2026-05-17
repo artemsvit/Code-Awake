@@ -95,7 +95,7 @@ private struct CodeAwakeMenuPanel: View {
             MenuToggleRow(
                 isEnabled: launchAtLoginController.isEnabled,
                 title: "Launch at Login",
-                icon: "power.circle",
+                icon: "arrow.up.forward.app",
                 action: { launchAtLoginController.setEnabled(!launchAtLoginController.isEnabled) }
             )
 
@@ -133,7 +133,7 @@ private struct MenuToggleRow: View {
             HStack(spacing: 9) {
                 Image(systemName: icon)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(isEnabled ? Color(red: 1.0, green: 0.62, blue: 0.52) : .white.opacity(0.70))
+                    .foregroundStyle(.white.opacity(0.70))
                     .frame(width: 20)
 
                 Text(title)
@@ -148,8 +148,7 @@ private struct MenuToggleRow: View {
             }
             .padding(.horizontal, 9)
             .frame(height: 36)
-            .background(.white.opacity(isEnabled ? 0.08 : 0.04))
-            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
