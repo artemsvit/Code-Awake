@@ -245,6 +245,8 @@ h1 {
   left: auto;
   z-index: 4;
   width: min(430px, 56%);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .mac-menubar {
@@ -258,9 +260,11 @@ h1 {
   gap: clamp(12px, 2vw, 24px);
   transform: none;
   color: rgba(255, 255, 255, 0.94);
+  --menubar-active-pad: 19px;
 }
 
 .menubar-icon {
+  position: relative;
   width: 42px;
   height: 42px;
   display: grid;
@@ -279,9 +283,17 @@ h1 {
 }
 
 .menubar-icon.active {
-  width: 80px;
+  z-index: 1;
+}
+
+.menubar-icon.active::before {
+  content: "";
+  position: absolute;
+  inset: 0 calc(var(--menubar-active-pad) * -1);
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(18px);
+  z-index: -1;
 }
 
 button.menubar-icon {
@@ -294,8 +306,11 @@ button.menubar-icon:focus-visible {
 }
 
 .mac-content:not(.is-menu-open) .menubar-icon.active {
-  background: transparent;
-  backdrop-filter: none;
+  z-index: 0;
+}
+
+.mac-content:not(.is-menu-open) .menubar-icon.active::before {
+  opacity: 0;
 }
 
 .menubar-icon svg {
@@ -360,13 +375,36 @@ button.menubar-icon:focus-visible {
   font-weight: 500;
 }
 
-.app-menu-row-active {
+.app-menu-row:hover,
+.app-menu-row:has(.app-switch-input:focus-visible),
+.app-menu-row:has(.app-switch:hover) {
   background: rgba(255, 255, 255, 0.085);
 }
 
 .app-menu-action {
   grid-template-columns: 40px 1fr;
-  min-height: 58px;
+  min-height: 64px;
+}
+
+a.app-menu-action,
+button.app-menu-action {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+a.app-menu-action:hover,
+a.app-menu-action:focus-visible,
+button.app-menu-action:hover,
+button.app-menu-action:focus-visible {
+  background: rgba(255, 255, 255, 0.075);
+  color: #fff;
+  outline: none;
 }
 
 .app-menu-timer {
@@ -377,7 +415,7 @@ button.menubar-icon:focus-visible {
 .app-menu-setting {
   width: 100%;
   grid-template-columns: 40px 1fr auto 18px;
-  min-height: 48px;
+  min-height: 64px;
   margin-top: 8px;
   border: 0;
   background: transparent;
@@ -388,6 +426,19 @@ button.menubar-icon:focus-visible {
   line-height: 1.2;
   text-align: left;
   cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.app-menu-setting:hover,
+.app-menu-setting:focus-visible,
+.app-menu-setting[aria-expanded="true"] {
+  background: rgba(255, 255, 255, 0.075);
+  color: #fff;
+  outline: none;
+}
+
+.app-menu-setting[aria-expanded="true"] .app-menu-symbol-muted {
+  color: var(--coral);
 }
 
 .app-menu-value {
@@ -426,15 +477,18 @@ button.menubar-icon:focus-visible {
   display: grid;
   gap: 2px;
   padding: 12px 0;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
-  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 22px;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.07), transparent 34%),
-    rgba(18, 14, 18, 0.94);
+    radial-gradient(circle at 82% 16%, rgba(255, 255, 255, 0.16), transparent 10rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.035) 44%),
+    rgba(18, 28, 45, 0.58);
   box-shadow:
-    0 20px 46px rgba(0, 0, 0, 0.36),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.68);
-  backdrop-filter: blur(18px);
+    0 22px 54px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(28px) saturate(1.35);
+  -webkit-backdrop-filter: blur(28px) saturate(1.35);
 }
 
 .app-timer-options[hidden] {
@@ -449,7 +503,7 @@ button.menubar-icon:focus-visible {
   color: rgba(255, 255, 255, 0.88);
   font: inherit;
   font-size: clamp(16px, 1.45vw, 21px);
-  font-weight: 600;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
 }
@@ -477,6 +531,36 @@ button.menubar-icon:focus-visible {
   fill: currentColor;
 }
 
+.app-menu-symbol svg.line-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.app-menu-symbol svg.update-symbol {
+  width: 26px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.app-update-action.is-spinning .update-symbol {
+  animation: update-spin 1100ms cubic-bezier(0.22, 0.72, 0.22, 1) both;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes update-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(180deg);
+  }
+}
+
 .app-menu-symbol img {
   width: 25px;
   height: 25px;
@@ -496,7 +580,7 @@ button.menubar-icon:focus-visible {
   transition: color 160ms ease;
 }
 
-.app-menu-row-active:has(.app-switch-input:checked) .app-menu-state-symbol {
+.app-menu-row:has(.app-switch-input:checked) .app-menu-state-symbol {
   color: var(--coral);
 }
 
@@ -1128,16 +1212,13 @@ h2 {
 
   .mac-menubar {
     gap: clamp(10px, 1.45vw, 19px);
+    --menubar-active-pad: 17px;
   }
 
   .menubar-icon {
     width: 38px;
     height: 38px;
     border-radius: 13px;
-  }
-
-  .menubar-icon.active {
-    width: 72px;
   }
 
   .menubar-icon svg {
@@ -1251,6 +1332,7 @@ h2 {
 
   .mac-menubar {
     height: 54px;
+    --menubar-active-pad: 16px;
   }
 
   .section,
@@ -1380,7 +1462,7 @@ h2 {
     top: 8px;
     right: 11px;
     left: auto;
-    width: calc(100% - 22px);
+    width: min(calc(100% - 22px), 430px);
   }
 
   .mac-menubar {
@@ -1394,10 +1476,6 @@ h2 {
     height: 28px;
     border-radius: 9px;
     font-size: 18px;
-  }
-
-  .menubar-icon.active {
-    width: 52px;
   }
 
   .menubar-icon svg {
@@ -1428,17 +1506,17 @@ h2 {
 
   .app-menu-action {
     grid-template-columns: 34px 1fr;
-    min-height: 50px;
+    min-height: 56px;
   }
 
   .app-menu-setting {
     grid-template-columns: 34px 1fr auto 16px;
-    min-height: 44px;
+    min-height: 56px;
     margin-top: 6px;
   }
 
   .app-timer-options {
-    border-radius: 16px;
+    border-radius: 20px;
     padding-block: 9px;
   }
 
@@ -1615,19 +1693,19 @@ h2 {
 
   .app-menu-action {
     grid-template-columns: 30px 1fr;
-    min-height: 46px;
+    min-height: 50px;
   }
 
   .app-menu-setting {
     grid-template-columns: 30px 1fr auto 14px;
-    min-height: 42px;
+    min-height: 50px;
     margin-top: 5px;
   }
 
   .app-timer-options {
     top: calc(100% + 4px);
     padding-block: 7px;
-    border-radius: 15px;
+    border-radius: 18px;
   }
 
   .app-timer-options button {

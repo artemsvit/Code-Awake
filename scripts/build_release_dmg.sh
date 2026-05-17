@@ -8,31 +8,83 @@ TEAM_ID="8KK8V96Q6B"
 CERT_SHA="46D5480FF8EB87C1A4BC8177DB9415DB8E75A4C9"
 CERT_NAME="Developer ID Application"
 NOTARY_PROFILE="CodeAwakeNotary"
-VERSION="1.0"
+SPARKLE_ACCOUNT="CodeAwake"
+GITHUB_REPO="${GITHUB_REPO:-artemsvit/Code-Awake}"
+GITHUB_RELEASE_URL_PREFIX="https://github.com/$GITHUB_REPO/releases/latest/download/"
+LANDING_SITE_URL="https://codeawake.artsvit.com/index.html"
 
-APP="$HOME/Library/Developer/Xcode/DerivedData/Code_Awake-fvnakmvxainmqdguqjpjnnilwaxm/Build/Products/Release/Code Awake.app"
+VERSION="$(awk -F ' = ' '/MARKETING_VERSION = / {gsub(/;/, "", $2); print $2; exit}' "$ROOT/Code Awake.xcodeproj/project.pbxproj")"
 ENTITLEMENTS="$ROOT/Code Awake/CodeAwakeRelease.entitlements"
 DIST="$ROOT/dist"
 STAGE="$DIST/dmg-stage"
 RW_DMG="$DIST/Code Awake $VERSION-rw.dmg"
 FINAL_DMG="$DIST/Code Awake $VERSION.dmg"
+LANDING_APP_DIR="$ROOT/landing/app"
+LANDING_DMG="$LANDING_APP_DIR/Code Awake $VERSION.dmg"
+GITHUB_RELEASE_DIR="$DIST/github-release"
+GITHUB_DMG_NAME="Code-Awake-$VERSION.dmg"
+GITHUB_RELEASE_DMG="$GITHUB_RELEASE_DIR/$GITHUB_DMG_NAME"
 
 export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
+
+current_build="$(awk -F ' = ' '/CURRENT_PROJECT_VERSION = / {gsub(/;/, "", $2); print $2; exit}' "$ROOT/Code Awake.xcodeproj/project.pbxproj")"
+next_build="$((current_build + 1))"
+
+echo "==> Bumping build number: $current_build -> $next_build"
+python3 - <<PY
+from pathlib import Path
+import re
+
+project = Path("$ROOT/Code Awake.xcodeproj/project.pbxproj")
+text = project.read_text()
+text = re.sub(r"CURRENT_PROJECT_VERSION = \\d+;", "CURRENT_PROJECT_VERSION = $next_build;", text)
+project.write_text(text)
+PY
 
 echo "==> Building Release"
 xcodebuild \
   -project "$PROJECT" \
   -scheme "$SCHEME" \
   -configuration Release \
+  -destination "generic/platform=macOS" \
   clean build \
   DEVELOPMENT_TEAM="$TEAM_ID" \
   CODE_SIGN_IDENTITY="$CERT_NAME" \
-  CODE_SIGN_STYLE=Manual
+  CODE_SIGN_STYLE=Manual \
+  ONLY_ACTIVE_ARCH=NO
 
-echo "==> Re-signing app with Developer ID timestamp"
+build_settings="$(xcodebuild -project "$PROJECT" -scheme "$SCHEME" -configuration Release -destination "generic/platform=macOS" -showBuildSettings DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_IDENTITY="$CERT_NAME" CODE_SIGN_STYLE=Manual ONLY_ACTIVE_ARCH=NO)"
+built_products_dir="$(printf "%s\\n" "$build_settings" | awk -F ' = ' '/BUILT_PRODUCTS_DIR = / {print $2; exit}')"
+APP="$built_products_dir/Code Awake.app"
+
+echo "==> Re-signing Sparkle helpers and app with Developer ID timestamp"
+sparkle_framework="$APP/Contents/Frameworks/Sparkle.framework"
+if [[ -d "$sparkle_framework" ]]; then
+  while IFS= read -r code_item; do
+    /usr/bin/codesign \
+      --force \
+      --options runtime \
+      --timestamp \
+      --preserve-metadata=identifier,entitlements \
+      --sign "$CERT_SHA" \
+      "$code_item"
+  done < <(find "$sparkle_framework" -depth \( -name "*.xpc" -o -name "*.app" -o -name "*.framework" \) -print)
+
+  while IFS= read -r executable_item; do
+    if /usr/bin/codesign -dv "$executable_item" >/dev/null 2>&1; then
+      /usr/bin/codesign \
+        --force \
+        --options runtime \
+        --timestamp \
+        --preserve-metadata=identifier,entitlements \
+        --sign "$CERT_SHA" \
+        "$executable_item"
+    fi
+  done < <(find "$sparkle_framework" -type f -perm -111 -print)
+fi
+
 /usr/bin/codesign \
   --force \
-  --deep \
   --options runtime \
   --timestamp \
   --entitlements "$ENTITLEMENTS" \
@@ -134,11 +186,55 @@ xcrun notarytool submit "$FINAL_DMG" --keychain-profile "$NOTARY_PROFILE" --wait
 xcrun stapler staple "$FINAL_DMG"
 xcrun stapler validate "$FINAL_DMG"
 
+echo "==> Preparing GitHub Release assets and Sparkle appcast"
+mkdir -p "$LANDING_APP_DIR"
+rm -rf "$GITHUB_RELEASE_DIR"
+mkdir -p "$GITHUB_RELEASE_DIR"
+cp "$FINAL_DMG" "$LANDING_DMG"
+cp "$FINAL_DMG" "$GITHUB_RELEASE_DMG"
+
+sparkle_bin="$(find "$HOME/Library/Developer/Xcode/DerivedData" -path "*/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_appcast" -print -quit)"
+if [[ -z "$sparkle_bin" ]]; then
+  echo "Sparkle generate_appcast tool was not found. Run xcodebuild -resolvePackageDependencies first." >&2
+  exit 1
+fi
+sparkle_tools_dir="$(dirname "$sparkle_bin")"
+sparkle_key_file="$(mktemp -t codeawake-sparkle-key)"
+trap 'rm -f "$sparkle_key_file"' EXIT
+rm -f "$sparkle_key_file"
+
+"$sparkle_tools_dir/generate_keys" --account "$SPARKLE_ACCOUNT" -x "$sparkle_key_file" >/dev/null
+
+rm -f "$GITHUB_RELEASE_DIR/appcast.xml" "$LANDING_APP_DIR/appcast.xml"
+
+"$sparkle_bin" \
+  --ed-key-file "$sparkle_key_file" \
+  --download-url-prefix "$GITHUB_RELEASE_URL_PREFIX" \
+  --maximum-versions 1 \
+  --link "$LANDING_SITE_URL" \
+  "$GITHUB_RELEASE_DIR"
+
+cp "$GITHUB_RELEASE_DIR/appcast.xml" "$LANDING_APP_DIR/appcast.xml"
+
+python3 - <<PY
+from pathlib import Path
+from urllib.parse import quote
+import re
+
+landing = Path("$ROOT/landing/index.html")
+download_href = "https://github.com/$GITHUB_REPO/releases/latest/download/" + quote("$GITHUB_DMG_NAME")
+text = landing.read_text()
+text = re.sub(r'href="(?:app/|https://github\\.com/)[^"]+\\.dmg"', f'href="{download_href}"', text)
+landing.write_text(text)
+PY
+
 echo "==> Verifying release"
 codesign --verify --deep --strict --verbose=2 "$APP"
 codesign --verify --verbose=2 "$FINAL_DMG"
 hdiutil verify "$FINAL_DMG"
 spctl --assess --type open --context context:primary-signature --verbose=4 "$FINAL_DMG"
+spctl --assess --type open --context context:primary-signature --verbose=4 "$LANDING_DMG"
+spctl --assess --type open --context context:primary-signature --verbose=4 "$GITHUB_RELEASE_DMG"
 
 mount_output="$(hdiutil attach "$FINAL_DMG" -readonly -noverify -noautoopen)"
 mount_point="$(echo "$mount_output" | awk '/\/Volumes\/Code Awake/ {print substr($0, index($0, "/Volumes/")); exit}')"

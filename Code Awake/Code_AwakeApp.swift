@@ -7,18 +7,29 @@
 
 import SwiftUI
 import AppKit
+import Sparkle
 
 @main
 struct Code_AwakeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var awakeController = AwakeController()
     @StateObject private var launchAtLoginController = LaunchAtLoginController()
+    private let updaterController: SPUStandardUpdaterController
+
+    init() {
+        updaterController = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+    }
 
     var body: some Scene {
         MenuBarExtra {
             CodeAwakeMenuPanel(
                 awakeController: awakeController,
                 launchAtLoginController: launchAtLoginController,
+                updateAction: { updaterController.checkForUpdates(nil) },
                 donateAction: openDonatePage,
                 quitAction: { NSApp.terminate(nil) }
             )
@@ -49,6 +60,7 @@ private struct CodeAwakeMenuPanel: View {
     @ObservedObject var awakeController: AwakeController
     @ObservedObject var launchAtLoginController: LaunchAtLoginController
 
+    let updateAction: () -> Void
     let donateAction: () -> Void
     let quitAction: () -> Void
 
@@ -91,6 +103,7 @@ private struct CodeAwakeMenuPanel: View {
                 MenuErrorText(errorMessage)
             }
 
+            MenuActionRow(title: "Check for Updates", icon: "arrow.triangle.2.circlepath", action: updateAction)
             MenuActionRow(title: "Buy Me a Coffee", icon: "cup.and.saucer", action: donateAction)
             MenuActionRow(title: "Quit Code Awake", icon: "power", action: quitAction)
         }

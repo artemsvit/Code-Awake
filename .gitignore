@@ -6,4 +6,5 @@ build/
 dist/
 DerivedData/
 landing/app/*.dmg
+landing/app/appcast.xml
 *.xcuserstate
