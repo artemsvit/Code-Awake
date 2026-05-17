@@ -501,6 +501,9 @@ button.app-menu-action:focus-visible {
     inset 0 0 0 1px rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(28px) saturate(1.35);
   -webkit-backdrop-filter: blur(28px) saturate(1.35);
+  font-size: clamp(16px, 1.45vw, 21px);
+  font-weight: 500;
+  line-height: 1.2;
 }
 
 .app-timer-options[hidden] {
@@ -514,8 +517,6 @@ button.app-menu-action:focus-visible {
   background: transparent;
   color: rgba(255, 255, 255, 0.88);
   font: inherit;
-  font-size: clamp(16px, 1.45vw, 21px);
-  font-weight: 500;
   text-align: left;
   cursor: pointer;
 }
@@ -541,6 +542,11 @@ button.app-menu-action:focus-visible {
   width: 27px;
   height: 24px;
   fill: currentColor;
+}
+
+.app-menu-symbol svg.timer-symbol {
+  width: 25px;
+  height: 25px;
 }
 
 .app-menu-symbol svg.line-icon {
@@ -1536,12 +1542,12 @@ h2 {
   .app-timer-options {
     border-radius: 20px;
     padding-block: 9px;
+    font-size: 15px;
   }
 
   .app-timer-options button {
     min-height: 36px;
     padding-inline: 24px;
-    font-size: 15px;
   }
 
   .app-menu-divider {
@@ -1729,12 +1735,12 @@ h2 {
     top: calc(100% + 4px);
     padding-block: 7px;
     border-radius: 18px;
+    font-size: 14px;
   }
 
   .app-timer-options button {
     min-height: 34px;
     padding-inline: 18px;
-    font-size: 14px;
   }
 
   .app-menu-symbol svg {
