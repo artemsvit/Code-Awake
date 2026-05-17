@@ -1,9 +1,5 @@
 <p align="center">
-  <img src="landing/assets/welcome-logo.png" alt="Code Awake" width="440">
-</p>
-
-<p align="center">
-  A quiet macOS menu bar utility that keeps your Mac awake when your work needs to stay reachable.
+  <img src="landing/assets/og-image.png" alt="Code Awake preview" width="920">
 </p>
 
 <p align="center">
@@ -12,10 +8,6 @@
   <a href="https://codeawake.artsvit.com">Website</a>
   <span> | </span>
   <a href="https://github.com/artemsvit/Code-Awake/releases/latest">Latest Release</a>
-</p>
-
-<p align="center">
-  <img src="landing/assets/og-image.png" alt="Code Awake preview" width="920">
 </p>
 
 ## Code Awake
