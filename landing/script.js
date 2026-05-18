@@ -10,15 +10,25 @@ const updateButton = document.querySelector(".app-update-action");
 const quitButton = document.querySelector(".app-quit-action");
 const lockButton = document.querySelector(".app-lock-action");
 const screenSaverOverlay = document.querySelector("#screen-saver-overlay");
+const updateDialogOverlay = document.querySelector("#update-dialog-overlay");
+const updateDialog = document.querySelector(".update-dialog");
+const updateDialogButton = document.querySelector(".update-dialog-button");
+const currentVersionText = document.querySelector("[data-current-version]");
+const downloadLink = document.querySelector("[data-download-link]") || document.querySelector('a[download][href*="Code-Awake-"]');
 let selectedTimerMinutes = 0;
 let remainingTimerSeconds = 0;
 let timerInterval;
 let menuBootTimeout;
 let quitReplayTimeout;
+let updateDialogTimeout;
 
 if ("scrollRestoration" in history) {
   history.scrollRestoration = "manual";
 }
+
+const syncAwakePreviewState = () => {
+  macContent?.classList.toggle("is-awake-off", !keepAwakeInput?.checked);
+};
 
 const scrollToTop = () => {
   try {
@@ -58,6 +68,8 @@ if (menuToggle && macContent) {
     macContent.classList.toggle("is-menu-open", isOpen);
     menuToggle.setAttribute("aria-expanded", String(isOpen));
   };
+
+  syncAwakePreviewState();
 
   menuBootTimeout = window.setTimeout(() => setMenuOpen(true), 520);
 
@@ -118,6 +130,34 @@ const closeTimerOptions = () => {
 
   timerButton.setAttribute("aria-expanded", "false");
   timerOptions.hidden = true;
+};
+
+const currentReleaseVersion = () => {
+  const href = downloadLink?.getAttribute("href") || "";
+  const match = href.match(/Code-Awake-([0-9]+(?:\.[0-9]+)+)\.dmg/i);
+  return match?.[1] || currentVersionText?.textContent?.trim() || "";
+};
+
+const setUpdateDialogActive = (isActive) => {
+  if (!updateDialogOverlay || !updateDialog) {
+    return;
+  }
+
+  updateDialogOverlay.classList.toggle("is-active", isActive);
+  updateDialogOverlay.setAttribute("aria-hidden", String(!isActive));
+
+  if (isActive) {
+    closeTimerOptions();
+    if (currentVersionText) {
+      currentVersionText.textContent = currentReleaseVersion();
+    }
+    window.setTimeout(() => {
+      updateDialogButton?.focus({ preventScroll: true });
+    }, 80);
+    return;
+  }
+
+  updateButton?.focus({ preventScroll: true });
 };
 
 const updateTimerLabel = () => {
@@ -191,6 +231,8 @@ timerOptionButtons.forEach((optionButton) => {
 });
 
 keepAwakeInput?.addEventListener("change", () => {
+  syncAwakePreviewState();
+
   if (keepAwakeInput.checked) {
     startTimer();
     return;
@@ -200,9 +242,28 @@ keepAwakeInput?.addEventListener("change", () => {
 });
 
 updateButton?.addEventListener("click", () => {
+  window.clearTimeout(updateDialogTimeout);
   updateButton.classList.remove("is-spinning");
   void updateButton.offsetWidth;
   updateButton.classList.add("is-spinning");
+  updateDialogTimeout = window.setTimeout(() => setUpdateDialogActive(true), 620);
+});
+
+updateDialogButton?.addEventListener("click", () => {
+  setUpdateDialogActive(false);
+});
+
+updateDialogOverlay?.addEventListener("click", (event) => {
+  if (event.target === updateDialogOverlay) {
+    setUpdateDialogActive(false);
+  }
+});
+
+updateDialogOverlay?.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" || event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    setUpdateDialogActive(false);
+  }
 });
 
 const setScreenSaverActive = (isActive) => {

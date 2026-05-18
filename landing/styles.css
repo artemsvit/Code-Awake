@@ -341,6 +341,20 @@ button.menubar-icon:focus-visible {
   stroke: none;
 }
 
+.cup-icon-outline {
+  display: none;
+}
+
+.mac-content.is-awake-off .menubar-icon.active .cup-icon-filled,
+.mac-content.is-awake-off .app-menu-state-symbol .cup-icon-filled {
+  display: none;
+}
+
+.mac-content.is-awake-off .menubar-icon.active .cup-icon-outline,
+.mac-content.is-awake-off .app-menu-state-symbol .cup-icon-outline {
+  display: block;
+}
+
 .menubar-icon.letter {
   font-size: 25px;
   font-weight: 900;
@@ -606,6 +620,10 @@ button.app-menu-action:focus-visible {
   color: var(--coral);
 }
 
+.mac-content.is-awake-off .app-menu-state-symbol {
+  color: rgba(255, 255, 255, 0.68);
+}
+
 .app-switch {
   position: relative;
   width: 56px;
@@ -670,18 +688,21 @@ button.app-menu-action:focus-visible {
   overflow: hidden;
   border: 0;
   background:
-    linear-gradient(30deg, rgba(143, 194, 129, 0.95) 0 26%, transparent 26% 100%),
-    linear-gradient(48deg, transparent 0 30%, rgba(139, 198, 149, 0.72) 30% 52%, transparent 52% 100%),
-    linear-gradient(32deg, transparent 0 52%, rgba(111, 187, 156, 0.64) 52% 72%, transparent 72% 100%),
-    radial-gradient(circle at 96% 24%, rgba(0, 143, 224, 0.98), transparent 34rem),
+    linear-gradient(32deg, rgba(143, 194, 129, 0.9) 0 24%, transparent 24% 100%),
+    linear-gradient(48deg, transparent 0 31%, rgba(139, 198, 149, 0.58) 31% 52%, transparent 52% 100%),
+    linear-gradient(32deg, transparent 0 54%, rgba(111, 187, 156, 0.5) 54% 72%, transparent 72% 100%),
+    radial-gradient(circle at 92% 22%, rgba(2, 135, 207, 0.92), transparent 33rem),
     linear-gradient(145deg, #72b283 0%, #48b1a5 52%, #0287cf 100%);
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: scale(1.025);
-  transition: opacity 260ms ease, visibility 260ms ease, transform 520ms ease;
+  transform: scale(1.015);
+  transition:
+    opacity 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 420ms,
+    transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .screen-saver-overlay.is-active {
@@ -702,34 +723,44 @@ button.app-menu-action:focus-visible {
 .screen-saver-overlay::before {
   z-index: 1;
   background:
-    radial-gradient(circle at 24% 24%, rgba(255, 255, 255, 0.25), transparent 24rem),
-    radial-gradient(circle at 82% 74%, rgba(214, 125, 235, 0.2), transparent 32rem),
-    radial-gradient(circle at 62% 16%, rgba(0, 143, 224, 0.28), transparent 28rem);
-  filter: blur(8px);
-  animation: screenSaverDrift 14s ease-in-out infinite alternate;
+    radial-gradient(circle at 26% 22%, rgba(255, 255, 255, 0.2), transparent 22rem),
+    radial-gradient(circle at 82% 72%, rgba(214, 125, 235, 0.16), transparent 32rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(10, 12, 18, 0.18));
+  filter: blur(4px);
+  opacity: 0.9;
+  transform: translate3d(-1.5%, -1%, 0) scale(1.04);
+  transition: transform 9000ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .screen-saver-overlay::after {
   z-index: 3;
   background:
-    radial-gradient(circle at 50% 46%, transparent 0 18rem, rgba(8, 10, 14, 0.16) 42rem),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.24));
+    radial-gradient(circle at 50% 45%, transparent 0 14rem, rgba(10, 12, 16, 0.13) 36rem),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(7, 8, 12, 0.24));
+}
+
+.screen-saver-overlay.is-active::before {
+  transform: translate3d(1.25%, 0.8%, 0) scale(1.07);
 }
 
 .screen-saver-field {
   position: absolute;
   inset: -18%;
   z-index: 0;
-  filter: saturate(1.08);
-  animation: screenSaverPan 20s ease-in-out infinite alternate;
+  filter: saturate(0.98);
+  transform: translate3d(-1.2%, -0.7%, 0) scale(1.035);
+  transition: transform 11000ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.screen-saver-overlay.is-active .screen-saver-field {
+  transform: translate3d(1.1%, 0.75%, 0) scale(1.055);
 }
 
 .screen-saver-band {
   position: absolute;
   display: block;
-  border-radius: 999px;
-  opacity: 0.62;
-  filter: blur(0.2px);
+  opacity: 0.52;
+  filter: blur(0.1px);
 }
 
 .screen-saver-band-one {
@@ -737,7 +768,7 @@ button.app-menu-action:focus-visible {
   height: 38vh;
   left: -12vw;
   top: 9vh;
-  background: rgba(151, 210, 146, 0.72);
+  background: rgba(151, 210, 146, 0.62);
   clip-path: polygon(0 0, 78% 0, 100% 100%, 22% 100%);
 }
 
@@ -746,7 +777,7 @@ button.app-menu-action:focus-visible {
   height: 42vh;
   right: -20vw;
   top: 36vh;
-  background: rgba(22, 155, 204, 0.56);
+  background: rgba(22, 155, 204, 0.46);
   clip-path: polygon(18% 0, 100% 0, 76% 100%, 0 100%);
 }
 
@@ -755,7 +786,7 @@ button.app-menu-action:focus-visible {
   height: 44vh;
   left: 18vw;
   bottom: -12vh;
-  background: rgba(128, 196, 158, 0.68);
+  background: rgba(128, 196, 158, 0.54);
   clip-path: polygon(0 0, 100% 30%, 88% 100%, 14% 82%);
 }
 
@@ -766,15 +797,27 @@ button.app-menu-action:focus-visible {
   height: clamp(68px, 6vw, 92px);
   display: grid;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 26px;
-  background: rgba(14, 18, 23, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 28px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.055)),
+    rgba(13, 17, 23, 0.18);
   box-shadow:
-    0 28px 80px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(24px) saturate(1.25);
-  -webkit-backdrop-filter: blur(24px) saturate(1.25);
-  animation: screenSaverLockPulse 3.8s ease-in-out infinite;
+    0 24px 72px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  opacity: 0;
+  transform: translateY(14px) scale(0.94);
+  backdrop-filter: blur(28px) saturate(1.18);
+  -webkit-backdrop-filter: blur(28px) saturate(1.18);
+  transition:
+    opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.screen-saver-overlay.is-active .screen-saver-lock {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .screen-saver-lock svg {
@@ -783,37 +826,107 @@ button.app-menu-action:focus-visible {
   fill: currentColor;
 }
 
-@keyframes screenSaverPan {
-  0% {
-    transform: translate3d(-2%, -1%, 0) scale(1.04) rotate(-1deg);
-  }
-
-  100% {
-    transform: translate3d(2%, 1%, 0) scale(1.08) rotate(1deg);
-  }
+.update-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1010;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  border: 0;
+  background: rgba(0, 0, 0, 0.72);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 180ms ease,
+    visibility 180ms;
 }
 
-@keyframes screenSaverDrift {
-  0% {
-    transform: translate3d(-4%, -3%, 0) scale(1);
-  }
-
-  100% {
-    transform: translate3d(4%, 3%, 0) scale(1.08);
-  }
+.update-dialog-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
-@keyframes screenSaverLockPulse {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-    opacity: 0.78;
-  }
+.update-dialog {
+  width: min(100%, 430px);
+  padding: 32px 28px 24px;
+  border: 1.5px solid rgba(255, 255, 255, 0.24);
+  border-radius: 30px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), transparent 36%),
+    rgba(18, 18, 19, 0.98);
+  box-shadow:
+    0 26px 90px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.72);
+  color: rgba(255, 255, 255, 0.9);
+  opacity: 0;
+  transform: translateY(10px) scale(0.97);
+  transition:
+    opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
 
-  50% {
-    transform: translateY(-6px) scale(1.03);
-    opacity: 1;
-  }
+.update-dialog-overlay.is-active .update-dialog {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.update-dialog:focus {
+  outline: none;
+}
+
+.update-dialog-icon {
+  width: 74px;
+  height: 74px;
+  display: block;
+  margin-bottom: 32px;
+  border-radius: 20px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
+}
+
+.update-dialog h2 {
+  margin: 0 0 16px;
+  font-size: clamp(22px, 2.8vw, 26px);
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.update-dialog p {
+  max-width: 330px;
+  margin: 0 0 26px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: clamp(18px, 2.1vw, 23px);
+  font-weight: 650;
+  line-height: 1.18;
+}
+
+.update-dialog-button {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 21px;
+  background: #0a84ff;
+  color: #fff;
+  font: inherit;
+  font-size: 19px;
+  font-weight: 760;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    transform 140ms ease;
+}
+
+.update-dialog-button:hover,
+.update-dialog-button:focus-visible {
+  background: #2091ff;
+  outline: none;
+}
+
+.update-dialog-button:active {
+  transform: scale(0.985);
 }
 
 .section {
@@ -1622,7 +1735,29 @@ h2 {
   }
 
   .mac-scene {
-    min-height: 560px;
+    min-height: 0;
+    padding: 12px 16px 14px;
+    overflow: hidden;
+    border-radius: 24px;
+  }
+
+  .mac-content {
+    position: relative;
+    top: auto;
+    right: auto;
+    left: auto;
+    width: min(520px, 100%);
+    margin-left: auto;
+  }
+
+  .app-menu-card {
+    width: min(100%, 440px);
+    margin-left: auto;
+  }
+
+  .mac-menubar {
+    gap: 16px;
+    --menubar-active-pad: 14px;
   }
 
   .features-grid {
@@ -1702,17 +1837,20 @@ h2 {
 
   .mac-scene {
     min-height: 0;
-    width: 100%;
-    aspect-ratio: 1 / 1.05;
+    width: calc(100% - 12px);
+    margin-inline: auto;
+    padding: 8px 11px 10px;
     overflow: hidden;
     border-radius: 22px;
   }
 
   .mac-content {
-    top: 8px;
-    right: 11px;
+    position: relative;
+    top: auto;
+    right: auto;
     left: auto;
-    width: min(calc(100% - 22px), 430px);
+    width: 100%;
+    margin-left: 0;
   }
 
   .mac-menubar {
@@ -1925,7 +2063,8 @@ h2 {
   }
 
   .mac-scene {
-    aspect-ratio: 1 / 1.12;
+    width: calc(100% - 20px);
+    padding: 8px 10px 10px;
   }
 
   .mac-menubar {
