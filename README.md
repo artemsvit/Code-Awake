@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/artemsvit/Code-Awake/releases/latest/download/Code-Awake-1.0.2.dmg"><strong>Download for Mac</strong></a>
+  <a href="https://github.com/artemsvit/Code-Awake/releases/latest/download/Code-Awake-1.0.3.dmg"><strong>Download for Mac</strong></a>
   <span> | </span>
   <a href="https://codeawake.artsvit.com">Website</a>
   <span> | </span>
@@ -20,7 +20,7 @@ The app uses public Apple power-management APIs and Sparkle for direct-distribut
 
 | Feature | Details |
 | --- | --- |
-| Keep Mac Awake | Prevents idle system sleep and display idle sleep while enabled. |
+| Keep Mac Awake | Prevents idle system sleep while allowing display sleep to follow the user's macOS settings. |
 | Closed Lid Workflows | Best-effort support when macOS allows closed-lid wake behavior, such as supported clamshell conditions. |
 | Auto Turn Off | Optional timer for turning awake mode off automatically. |
 | Launch at Login | Starts Code Awake with macOS so the menu bar control is ready. |
@@ -39,7 +39,7 @@ Code Awake is distributed outside the Mac App Store with Developer ID signing an
 
 Release assets are published through GitHub Releases:
 
-- DMG: `Code-Awake-1.0.2.dmg`
+- DMG: `Code-Awake-1.0.3.dmg`
 - Sparkle feed: `appcast.xml`
 
 The current Sparkle feed URL is:

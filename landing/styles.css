@@ -36,6 +36,10 @@ body {
   text-rendering: geometricPrecision;
 }
 
+body.is-screen-saver-active {
+  overflow: hidden;
+}
+
 body.simple-body {
   min-height: 100svh;
   background:
@@ -657,6 +661,161 @@ button.app-menu-action:focus-visible {
   transform: translateX(26px);
 }
 
+.screen-saver-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 0;
+  background:
+    linear-gradient(30deg, rgba(143, 194, 129, 0.95) 0 26%, transparent 26% 100%),
+    linear-gradient(48deg, transparent 0 30%, rgba(139, 198, 149, 0.72) 30% 52%, transparent 52% 100%),
+    linear-gradient(32deg, transparent 0 52%, rgba(111, 187, 156, 0.64) 52% 72%, transparent 72% 100%),
+    radial-gradient(circle at 96% 24%, rgba(0, 143, 224, 0.98), transparent 34rem),
+    linear-gradient(145deg, #72b283 0%, #48b1a5 52%, #0287cf 100%);
+  color: rgba(255, 255, 255, 0.86);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(1.025);
+  transition: opacity 260ms ease, visibility 260ms ease, transform 520ms ease;
+}
+
+.screen-saver-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.screen-saver-overlay::before,
+.screen-saver-overlay::after {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  pointer-events: none;
+}
+
+.screen-saver-overlay::before {
+  z-index: 1;
+  background:
+    radial-gradient(circle at 24% 24%, rgba(255, 255, 255, 0.25), transparent 24rem),
+    radial-gradient(circle at 82% 74%, rgba(214, 125, 235, 0.2), transparent 32rem),
+    radial-gradient(circle at 62% 16%, rgba(0, 143, 224, 0.28), transparent 28rem);
+  filter: blur(8px);
+  animation: screenSaverDrift 14s ease-in-out infinite alternate;
+}
+
+.screen-saver-overlay::after {
+  z-index: 3;
+  background:
+    radial-gradient(circle at 50% 46%, transparent 0 18rem, rgba(8, 10, 14, 0.16) 42rem),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.24));
+}
+
+.screen-saver-field {
+  position: absolute;
+  inset: -18%;
+  z-index: 0;
+  filter: saturate(1.08);
+  animation: screenSaverPan 20s ease-in-out infinite alternate;
+}
+
+.screen-saver-band {
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+  opacity: 0.62;
+  filter: blur(0.2px);
+}
+
+.screen-saver-band-one {
+  width: 86vw;
+  height: 38vh;
+  left: -12vw;
+  top: 9vh;
+  background: rgba(151, 210, 146, 0.72);
+  clip-path: polygon(0 0, 78% 0, 100% 100%, 22% 100%);
+}
+
+.screen-saver-band-two {
+  width: 96vw;
+  height: 42vh;
+  right: -20vw;
+  top: 36vh;
+  background: rgba(22, 155, 204, 0.56);
+  clip-path: polygon(18% 0, 100% 0, 76% 100%, 0 100%);
+}
+
+.screen-saver-band-three {
+  width: 72vw;
+  height: 44vh;
+  left: 18vw;
+  bottom: -12vh;
+  background: rgba(128, 196, 158, 0.68);
+  clip-path: polygon(0 0, 100% 30%, 88% 100%, 14% 82%);
+}
+
+.screen-saver-lock {
+  position: relative;
+  z-index: 4;
+  width: clamp(68px, 6vw, 92px);
+  height: clamp(68px, 6vw, 92px);
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 26px;
+  background: rgba(14, 18, 23, 0.22);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(24px) saturate(1.25);
+  -webkit-backdrop-filter: blur(24px) saturate(1.25);
+  animation: screenSaverLockPulse 3.8s ease-in-out infinite;
+}
+
+.screen-saver-lock svg {
+  width: clamp(30px, 2.6vw, 40px);
+  height: clamp(42px, 3.6vw, 54px);
+  fill: currentColor;
+}
+
+@keyframes screenSaverPan {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1.04) rotate(-1deg);
+  }
+
+  100% {
+    transform: translate3d(2%, 1%, 0) scale(1.08) rotate(1deg);
+  }
+}
+
+@keyframes screenSaverDrift {
+  0% {
+    transform: translate3d(-4%, -3%, 0) scale(1);
+  }
+
+  100% {
+    transform: translate3d(4%, 3%, 0) scale(1.08);
+  }
+}
+
+@keyframes screenSaverLockPulse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.78;
+  }
+
+  50% {
+    transform: translateY(-6px) scale(1.03);
+    opacity: 1;
+  }
+}
+
 .section {
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
@@ -749,6 +908,16 @@ h2 {
   background: linear-gradient(135deg, rgba(250, 199, 147, 0.22), rgba(214, 125, 235, 0.18));
 }
 
+.feature-card:nth-child(5) .feature-icon {
+  color: #f1d08a;
+  background: linear-gradient(135deg, rgba(241, 208, 138, 0.22), rgba(255, 159, 133, 0.14));
+}
+
+.feature-card:nth-child(6) .feature-icon {
+  color: #9fd7f4;
+  background: linear-gradient(135deg, rgba(159, 215, 244, 0.2), rgba(214, 125, 235, 0.14));
+}
+
 .feature-card h3 {
   margin-bottom: 12px;
   font-size: 22px;
@@ -822,6 +991,58 @@ h2 {
   stroke-width: 2.15;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.step-icon .step-toggle-symbol {
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: none;
+}
+
+.step-icon .step-start-symbol,
+.step-icon .step-finish-symbol {
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: none;
+}
+
+.step-start-symbol .start-disc {
+  fill: url("#start-step-gradient");
+  stroke: rgba(255, 255, 255, 0.24);
+  stroke-width: 1;
+}
+
+.step-start-symbol .start-play {
+  fill: #fff;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.24));
+}
+
+.step-toggle-symbol .toggle-track {
+  fill: url("#toggle-step-gradient");
+  stroke: rgba(255, 255, 255, 0.26);
+  stroke-width: 1;
+}
+
+.step-toggle-symbol .toggle-knob {
+  fill: #fff;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.28));
+}
+
+.step-finish-symbol .finish-pole {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 2.1;
+  stroke-linecap: round;
+}
+
+.step-finish-symbol .finish-flag {
+  fill: url("#finish-step-gradient");
+  stroke: rgba(255, 255, 255, 0.24);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.22));
 }
 
 .download-band {
@@ -1201,6 +1422,12 @@ h2 {
   }
 
   .scroll-cue {
+    animation: none;
+  }
+
+  .screen-saver-overlay::before,
+  .screen-saver-field,
+  .screen-saver-lock {
     animation: none;
   }
 }

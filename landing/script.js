@@ -8,6 +8,8 @@ const timerValue = document.querySelector(".app-menu-value");
 const timerOptionButtons = document.querySelectorAll(".app-timer-options button");
 const updateButton = document.querySelector(".app-update-action");
 const quitButton = document.querySelector(".app-quit-action");
+const lockButton = document.querySelector(".app-lock-action");
+const screenSaverOverlay = document.querySelector("#screen-saver-overlay");
 let selectedTimerMinutes = 0;
 let remainingTimerSeconds = 0;
 let timerInterval;
@@ -201,6 +203,41 @@ updateButton?.addEventListener("click", () => {
   updateButton.classList.remove("is-spinning");
   void updateButton.offsetWidth;
   updateButton.classList.add("is-spinning");
+});
+
+const setScreenSaverActive = (isActive) => {
+  if (!screenSaverOverlay) {
+    return;
+  }
+
+  screenSaverOverlay.classList.toggle("is-active", isActive);
+  document.body.classList.toggle("is-screen-saver-active", isActive);
+  screenSaverOverlay.setAttribute("aria-hidden", String(!isActive));
+
+  if (isActive) {
+    closeTimerOptions();
+    screenSaverOverlay.focus({ preventScroll: true });
+    return;
+  }
+
+  lockButton?.focus({ preventScroll: true });
+};
+
+lockButton?.addEventListener("click", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  setScreenSaverActive(true);
+});
+
+screenSaverOverlay?.addEventListener("click", () => {
+  setScreenSaverActive(false);
+});
+
+screenSaverOverlay?.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" || event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    setScreenSaverActive(false);
+  }
 });
 
 document.addEventListener("click", closeTimerOptions);

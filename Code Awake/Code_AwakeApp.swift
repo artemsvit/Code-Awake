@@ -14,6 +14,7 @@ struct Code_AwakeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var awakeController = AwakeController()
     @StateObject private var launchAtLoginController = LaunchAtLoginController()
+    private let menuBarSymbolPointSize: CGFloat = 14
     private let updaterController: SPUStandardUpdaterController
 
     init() {
@@ -30,11 +31,17 @@ struct Code_AwakeApp: App {
                 awakeController: awakeController,
                 launchAtLoginController: launchAtLoginController,
                 updateAction: { updaterController.checkForUpdates(nil) },
+                lockScreenAction: lockScreenNow,
                 donateAction: openDonatePage,
                 quitAction: { NSApp.terminate(nil) }
             )
         } label: {
-            Image(systemName: awakeController.isEnabled ? "cup.and.saucer.fill" : "cup.and.saucer")
+            Image(nsImage: Self.makeStatusBarIcon(
+                enabled: awakeController.isEnabled,
+                size: menuBarSymbolPointSize
+            ))
+            .resizable()
+            .frame(width: menuBarSymbolPointSize, height: menuBarSymbolPointSize)
         }
         .menuBarExtraStyle(.window)
         .commands {
@@ -47,6 +54,22 @@ struct Code_AwakeApp: App {
         "Keep Mac Awake"
     }
 
+    private static func makeStatusBarIcon(enabled: Bool, size: CGFloat) -> NSImage {
+        let symbolName = enabled ? "cup.and.saucer.fill" : "cup.and.saucer"
+        let configuration = NSImage.SymbolConfiguration(pointSize: size, weight: .semibold)
+        let icon = NSImage(
+            systemSymbolName: symbolName,
+            accessibilityDescription: "Keep Mac Awake"
+        )?.withSymbolConfiguration(configuration) ?? NSImage(
+            systemSymbolName: symbolName,
+            accessibilityDescription: "Keep Mac Awake"
+        ) ?? NSImage()
+
+        icon.size = CGSize(width: size, height: size)
+        icon.isTemplate = true
+        return icon
+    }
+
     private func openDonatePage() {
         guard let url = URL(string: "https://www.paypal.com/donate/?hosted_button_id=FF9ZWWCQR6X2W") else {
             return
@@ -54,13 +77,35 @@ struct Code_AwakeApp: App {
 
         NSWorkspace.shared.open(url)
     }
+
+    private func lockScreenNow() {
+        launchSystemTool("/usr/bin/open", arguments: ["-a", "ScreenSaverEngine"])
+        launchSystemTool(
+            "/System/Library/CoreServices/Menu Extras/User.menu/Contents/Resources/CGSession",
+            arguments: ["-suspend"]
+        )
+    }
+
+    private func launchSystemTool(_ path: String, arguments: [String]) {
+        guard FileManager.default.isExecutableFile(atPath: path) else {
+            return
+        }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: path)
+        process.arguments = arguments
+
+        try? process.run()
+    }
 }
 
 private struct CodeAwakeMenuPanel: View {
     @ObservedObject var awakeController: AwakeController
     @ObservedObject var launchAtLoginController: LaunchAtLoginController
+    @State private var updateIconRotation = 0.0
 
     let updateAction: () -> Void
+    let lockScreenAction: () -> Void
     let donateAction: () -> Void
     let quitAction: () -> Void
 
@@ -89,6 +134,8 @@ private struct CodeAwakeMenuPanel: View {
                 }
             )
 
+            MenuActionRow(title: "Lock Screen Now", icon: "lock", action: lockScreenAction)
+
             Divider()
                 .overlay(.white.opacity(0.10))
 
@@ -96,6 +143,7 @@ private struct CodeAwakeMenuPanel: View {
                 isEnabled: launchAtLoginController.isEnabled,
                 title: "Launch at Login",
                 icon: "arrow.up.forward.app",
+                iconScale: 1.16,
                 action: { launchAtLoginController.setEnabled(!launchAtLoginController.isEnabled) }
             )
 
@@ -103,8 +151,13 @@ private struct CodeAwakeMenuPanel: View {
                 MenuErrorText(errorMessage)
             }
 
-            MenuActionRow(title: "Check for Updates", icon: "arrow.triangle.2.circlepath", action: updateAction)
-            MenuActionRow(title: "Buy Me a Coffee", icon: "cup.and.saucer", action: donateAction)
+            MenuActionRow(
+                title: "Check for Updates",
+                icon: "arrow.triangle.2.circlepath",
+                iconRotation: updateIconRotation,
+                action: checkForUpdates
+            )
+            MenuActionRow(title: "Buy Me a Coffee", icon: "cup.and.heat.waves", action: donateAction)
             MenuActionRow(title: "Quit Code Awake", icon: "power", action: quitAction)
         }
         .padding(9)
@@ -120,21 +173,31 @@ private struct CodeAwakeMenuPanel: View {
             )
         )
     }
+
+    private func checkForUpdates() {
+        withAnimation(.linear(duration: 0.7)) {
+            updateIconRotation += 360
+        }
+
+        updateAction()
+    }
 }
 
 private struct MenuToggleRow: View {
     let isEnabled: Bool
     let title: String
     let icon: String
+    var iconScale = 1.0
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 9) {
                 Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(iconColor)
-                    .frame(width: 20)
+                    .scaleEffect(iconScale)
+                    .frame(width: 24)
 
                 Text(title)
                     .font(.system(size: 13, weight: .semibold))
@@ -192,15 +255,17 @@ private struct AwakeSwitch: View {
 private struct MenuActionRow: View {
     let title: String
     let icon: String
+    var iconRotation = 0.0
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 9) {
                 Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.70))
-                    .frame(width: 20)
+                    .rotationEffect(.degrees(iconRotation))
+                    .frame(width: 24)
 
                 Text(title)
                     .font(.system(size: 13, weight: .semibold))
@@ -239,9 +304,9 @@ private struct MenuTimerRow: View {
         } label: {
             HStack(spacing: 9) {
                 Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(hasActiveTimer ? Color(red: 1.0, green: 0.62, blue: 0.52) : .white.opacity(0.72))
-                    .frame(width: 20)
+                    .frame(width: 24)
 
                 Text(title)
                     .font(.system(size: 13, weight: .semibold))

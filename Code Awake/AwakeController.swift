@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import IOKit.pwr_mgt
+import IOKit.ps
 
 final class AwakeController: ObservableObject {
     @Published private(set) var keepAwakeEnabled = false
@@ -21,13 +22,14 @@ final class AwakeController: ObservableObject {
 
     private let keepAwakeDefaultsKey = "keepAwakeEnabled"
     private let keepAwakeOffTimerDefaultsKey = "keepAwakeOffTimerMinutes"
+    private let lowBatteryThreshold = 10
     static let offTimerOptions = [0, 30, 60, 120, 180, 240, 360, 480, 720]
     private var assertionIDs: [IOPMAssertionID] = []
     private var offTimer: Timer?
+    private var batteryMonitorTimer: Timer?
     private let assertions: [(type: String, reason: CFString)] = [
         (kIOPMAssertionTypePreventSystemSleep, "Code Awake - Prevent system sleep" as CFString),
         (kIOPMAssertPreventUserIdleSystemSleep, "Code Awake - Prevent idle system sleep" as CFString),
-        (kIOPMAssertPreventUserIdleDisplaySleep, "Code Awake - Prevent display sleep" as CFString),
         (kIOPMAssertNetworkClientActive, "Code Awake - Keep network clients active" as CFString)
     ]
 
@@ -40,6 +42,7 @@ final class AwakeController: ObservableObject {
     deinit {
         releaseAssertions()
         cancelOffTimer()
+        stopBatteryMonitor()
     }
 
     @discardableResult
@@ -61,16 +64,27 @@ final class AwakeController: ObservableObject {
 
     private func updateAssertions() -> Bool {
         if isEnabled {
+            guard shouldAllowAwakeSession() else {
+                keepAwakeEnabled = false
+                UserDefaults.standard.set(false, forKey: keepAwakeDefaultsKey)
+                releaseAssertions()
+                cancelOffTimer()
+                stopBatteryMonitor()
+                return false
+            }
+
             let didCreateAssertions = createAssertions()
 
             if !didCreateAssertions {
                 keepAwakeEnabled = false
                 UserDefaults.standard.set(false, forKey: keepAwakeDefaultsKey)
                 cancelOffTimer()
+                stopBatteryMonitor()
             }
 
             if didCreateAssertions {
                 scheduleOffTimer()
+                startBatteryMonitor()
             }
 
             return didCreateAssertions
@@ -78,6 +92,7 @@ final class AwakeController: ObservableObject {
 
         releaseAssertions()
         cancelOffTimer()
+        stopBatteryMonitor()
         errorMessage = nil
         return true
     }
@@ -141,5 +156,68 @@ final class AwakeController: ObservableObject {
         offTimer?.invalidate()
         offTimer = nil
         keepAwakeRemainingSeconds = 0
+    }
+
+    private func startBatteryMonitor() {
+        stopBatteryMonitor()
+
+        batteryMonitorTimer = Timer.scheduledTimer(
+            withTimeInterval: 60,
+            repeats: true
+        ) { [weak self] _ in
+            self?.endSessionIfBatteryIsLow()
+        }
+    }
+
+    private func stopBatteryMonitor() {
+        batteryMonitorTimer?.invalidate()
+        batteryMonitorTimer = nil
+    }
+
+    private func endSessionIfBatteryIsLow() {
+        guard keepAwakeEnabled, !shouldAllowAwakeSession() else {
+            return
+        }
+
+        keepAwakeEnabled = false
+        UserDefaults.standard.set(false, forKey: keepAwakeDefaultsKey)
+        releaseAssertions()
+        cancelOffTimer()
+        stopBatteryMonitor()
+    }
+
+    private func shouldAllowAwakeSession() -> Bool {
+        guard let batteryState = currentBatteryState() else {
+            return true
+        }
+
+        guard batteryState.isOnBatteryPower, batteryState.percent <= lowBatteryThreshold else {
+            return true
+        }
+
+        errorMessage = "Awake mode turned off because battery is below \(lowBatteryThreshold)%."
+        return false
+    }
+
+    private func currentBatteryState() -> (percent: Int, isOnBatteryPower: Bool)? {
+        guard let snapshot = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
+              let sources = IOPSCopyPowerSourcesList(snapshot)?.takeRetainedValue() as? [CFTypeRef] else {
+            return nil
+        }
+
+        for source in sources {
+            guard let description = IOPSGetPowerSourceDescription(snapshot, source)?.takeUnretainedValue() as? [String: Any],
+                  let currentCapacity = description[kIOPSCurrentCapacityKey] as? Int,
+                  let maxCapacity = description[kIOPSMaxCapacityKey] as? Int,
+                  maxCapacity > 0 else {
+                continue
+            }
+
+            let percent = Int((Double(currentCapacity) / Double(maxCapacity) * 100).rounded())
+            let powerSourceState = description[kIOPSPowerSourceStateKey] as? String
+            return (percent, powerSourceState == kIOPSBatteryPowerValue)
+        }
+
+        return nil
     }
 }
