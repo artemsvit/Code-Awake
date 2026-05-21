@@ -2,13 +2,20 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if [[ -f "$ROOT/.env" ]]; then
+  set -a
+  # Local release signing settings. This file is ignored by git.
+  source "$ROOT/.env"
+  set +a
+fi
+
 PROJECT="$ROOT/Code Awake.xcodeproj"
 SCHEME="Code Awake"
-TEAM_ID="YOURTEAMID"
-CERT_SHA="CODE_AWAKE_CERT_SIGN_IDENTITY"
-CERT_NAME="Developer ID Application"
-NOTARY_PROFILE="YourNotaryProfile"
-SPARKLE_ACCOUNT="CodeAwake"
+TEAM_ID="${CODE_AWAKE_TEAM_ID:?Set CODE_AWAKE_TEAM_ID to your Apple Developer Team ID.}"
+CERT_SIGN_IDENTITY="${CODE_AWAKE_CERT_SIGN_IDENTITY:?Set CODE_AWAKE_CERT_SIGN_IDENTITY to your Developer ID signing identity name or SHA-1 fingerprint.}"
+NOTARY_PROFILE="${CODE_AWAKE_NOTARY_PROFILE:?Set CODE_AWAKE_NOTARY_PROFILE to your notarytool keychain profile name.}"
+SPARKLE_ACCOUNT="${CODE_AWAKE_SPARKLE_ACCOUNT:-CodeAwake}"
 GITHUB_REPO="${GITHUB_REPO:-artemsvit/Code-Awake}"
 GITHUB_RELEASE_URL_PREFIX="https://github.com/$GITHUB_REPO/releases/latest/download/"
 LANDING_SITE_URL="https://codeawake.artsvit.com/index.html"
@@ -49,11 +56,11 @@ xcodebuild \
   -destination "generic/platform=macOS" \
   clean build \
   DEVELOPMENT_TEAM="$TEAM_ID" \
-  CODE_SIGN_IDENTITY="$CERT_NAME" \
+  CODE_SIGN_IDENTITY="$CERT_SIGN_IDENTITY" \
   CODE_SIGN_STYLE=Manual \
   ONLY_ACTIVE_ARCH=NO
 
-build_settings="$(xcodebuild -project "$PROJECT" -scheme "$SCHEME" -configuration Release -destination "generic/platform=macOS" -showBuildSettings DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_IDENTITY="$CERT_NAME" CODE_SIGN_STYLE=Manual ONLY_ACTIVE_ARCH=NO)"
+build_settings="$(xcodebuild -project "$PROJECT" -scheme "$SCHEME" -configuration Release -destination "generic/platform=macOS" -showBuildSettings DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_IDENTITY="$CERT_SIGN_IDENTITY" CODE_SIGN_STYLE=Manual ONLY_ACTIVE_ARCH=NO)"
 built_products_dir="$(printf "%s\\n" "$build_settings" | awk -F ' = ' '/BUILT_PRODUCTS_DIR = / {print $2; exit}')"
 APP="$built_products_dir/Code Awake.app"
 
@@ -66,7 +73,7 @@ if [[ -d "$sparkle_framework" ]]; then
       --options runtime \
       --timestamp \
       --preserve-metadata=identifier,entitlements \
-      --sign "$CERT_SHA" \
+      --sign "$CERT_SIGN_IDENTITY" \
       "$code_item"
   done < <(find "$sparkle_framework" -depth \( -name "*.xpc" -o -name "*.app" -o -name "*.framework" \) -print)
 
@@ -77,7 +84,7 @@ if [[ -d "$sparkle_framework" ]]; then
         --options runtime \
         --timestamp \
         --preserve-metadata=identifier,entitlements \
-        --sign "$CERT_SHA" \
+        --sign "$CERT_SIGN_IDENTITY" \
         "$executable_item"
     fi
   done < <(find "$sparkle_framework" -type f -perm -111 -print)
@@ -88,7 +95,7 @@ fi
   --options runtime \
   --timestamp \
   --entitlements "$ENTITLEMENTS" \
-  --sign "$CERT_SHA" \
+  --sign "$CERT_SIGN_IDENTITY" \
   "$APP"
 
 echo "==> Preparing DMG staging folder"
@@ -179,7 +186,7 @@ hdiutil detach "$mount_point"
 echo "==> Compressing and signing DMG"
 hdiutil convert "$RW_DMG" -format UDZO -imagekey zlib-level=9 -o "$FINAL_DMG"
 rm -f "$RW_DMG"
-/usr/bin/codesign --force --timestamp --sign "$CERT_SHA" "$FINAL_DMG"
+/usr/bin/codesign --force --timestamp --sign "$CERT_SIGN_IDENTITY" "$FINAL_DMG"
 
 echo "==> Notarizing DMG"
 xcrun notarytool submit "$FINAL_DMG" --keychain-profile "$NOTARY_PROFILE" --wait

@@ -1,6 +1,9 @@
 *.xcuserstate
 xcuserdata/
 .DS_Store
+.env
+.env.*
+!.env.example
 .build/
 build/
 dist/
@@ -8,3 +11,12 @@ DerivedData/
 landing/app/*.dmg
 landing/app/appcast.xml
 *.xcuserstate
+*.keychain
+*.keychain-db
+*.p12
+*.cer
+*.p8
+*.mobileprovision
+*.provisionprofile
+AuthKey_*.p8
+Config/LocalSigning.xcconfig
