@@ -14,7 +14,7 @@ const screenSaverOverlay = document.querySelector("#screen-saver-overlay");
 const updateDialogOverlay = document.querySelector("#update-dialog-overlay");
 const updateDialog = document.querySelector(".update-dialog");
 const updateDialogButton = document.querySelector(".update-dialog-button");
-const currentVersionText = document.querySelector("[data-current-version]");
+const currentVersionTexts = document.querySelectorAll("[data-current-version]");
 const downloadLink = document.querySelector("[data-download-link]") || document.querySelector('a[download][href*="Code-Awake-"]');
 let selectedTimerMinutes = 0;
 let remainingTimerSeconds = 0;
@@ -136,7 +136,7 @@ const closeTimerOptions = () => {
 const currentReleaseVersion = () => {
   const href = downloadLink?.getAttribute("href") || "";
   const match = href.match(/Code-Awake-([0-9]+(?:\.[0-9]+)+)\.dmg/i);
-  return match?.[1] || currentVersionText?.textContent?.trim() || "";
+  return match?.[1] || currentVersionTexts[0]?.textContent?.trim() || "";
 };
 
 const setUpdateDialogActive = (isActive) => {
@@ -149,9 +149,9 @@ const setUpdateDialogActive = (isActive) => {
 
   if (isActive) {
     closeTimerOptions();
-    if (currentVersionText) {
-      currentVersionText.textContent = currentReleaseVersion();
-    }
+    currentVersionTexts.forEach((versionText) => {
+      versionText.textContent = currentReleaseVersion();
+    });
     window.setTimeout(() => {
       updateDialogButton?.focus({ preventScroll: true });
     }, 80);

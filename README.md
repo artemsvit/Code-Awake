@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/artemsvit/Code-Awake/releases/latest/download/Code-Awake-1.0.6.dmg"><strong>Download for Mac</strong></a>
+  <a href="https://github.com/artemsvit/Code-Awake/releases/latest/download/Code-Awake-1.0.7.dmg"><strong>Download for Mac</strong></a>
   <span> | </span>
   <a href="https://codeawake.artsvit.com">Website</a>
   <span> | </span>
@@ -40,7 +40,7 @@ Code Awake is distributed outside the Mac App Store with Developer ID signing an
 
 Release assets are published through GitHub Releases:
 
-- DMG: `Code-Awake-1.0.6.dmg`
+- DMG: `Code-Awake-1.0.7.dmg`
 - Sparkle feed: `appcast.xml`
 
 The current Sparkle feed URL is:

@@ -168,6 +168,7 @@ private struct CodeAwakeMenuPanel: View {
                 title: "Check for Updates",
                 icon: "arrow.triangle.2.circlepath",
                 iconRotation: updateIconRotation,
+                trailingText: appVersionLabel,
                 action: checkForUpdates
             )
             MenuActionRow(title: "Buy Me a Coffee", icon: "cup.and.heat.waves", action: donateAction)
@@ -193,6 +194,16 @@ private struct CodeAwakeMenuPanel: View {
         }
 
         updateAction()
+    }
+
+    private var appVersionLabel: String {
+        guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
+              !version.isEmpty
+        else {
+            return ""
+        }
+
+        return "v\(version)"
     }
 }
 
@@ -324,6 +335,7 @@ private struct MenuActionRow: View {
     let title: String
     let icon: String
     var iconRotation = 0.0
+    var trailingText = ""
     let action: () -> Void
 
     var body: some View {
@@ -340,6 +352,14 @@ private struct MenuActionRow: View {
                     .foregroundStyle(.white.opacity(0.92))
 
                 Spacer()
+
+                if !trailingText.isEmpty {
+                    Text(trailingText)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.56))
+                        .monospacedDigit()
+                        .lineLimit(1)
+                }
             }
             .padding(.horizontal, 9)
             .frame(height: 31)

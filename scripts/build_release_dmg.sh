@@ -116,20 +116,20 @@ from PIL import Image, ImageDraw, ImageFont
 
 out = Path("$STAGE/.background/background.png")
 W, H = 760, 440
-img = Image.new("RGB", (W, H), (24, 17, 24))
+img = Image.new("RGB", (W, H), (250, 244, 246))
 
 for y in range(H):
     for x in range(W):
         t = (x / W * 0.35) + (y / H * 0.65)
-        r = int(20 + (43 - 20) * t)
-        g = int(17 + (22 - 17) * t)
-        b = int(22 + (40 - 22) * t)
+        r = int(255 + (241 - 255) * t)
+        g = int(249 + (230 - 249) * t)
+        b = int(246 + (238 - 246) * t)
         img.putpixel((x, y), (r, g, b))
 
 d = ImageDraw.Draw(img, "RGBA")
 for cx, cy, rad, col in [
-    (690, 25, 180, (251, 200, 148, 34)),
-    (70, 430, 150, (213, 126, 235, 45)),
+    (690, 25, 180, (251, 200, 148, 74)),
+    (70, 430, 150, (213, 126, 235, 76)),
 ]:
     for i in range(3):
         d.ellipse((cx-rad+i*42, cy-rad+i*42, cx+rad-i*42, cy+rad-i*42), fill=col)
@@ -140,10 +140,10 @@ def font(size):
             return ImageFont.truetype(path, size)
     return ImageFont.load_default()
 
-d.text((46, 44), "Code Awake", fill=(255, 255, 255, 238), font=font(30))
-d.text((46, 84), "Drag Code Awake into Applications", fill=(255, 255, 255, 178), font=font(17))
-d.line((350, 246, 420, 246), fill=(246, 174, 178, 230), width=4)
-d.polygon([(420, 236), (446, 246), (420, 256)], fill=(246, 174, 178, 230))
+d.text((46, 44), "Code Awake", fill=(43, 34, 44, 238), font=font(30))
+d.text((46, 84), "Drag Code Awake into Applications", fill=(91, 78, 92, 205), font=font(17))
+d.line((350, 246, 420, 246), fill=(213, 126, 235, 210), width=4)
+d.polygon([(420, 236), (446, 246), (420, 256)], fill=(251, 160, 146, 230))
 
 img.save(out)
 PY
@@ -164,6 +164,9 @@ tell application "Finder"
     set current view of container window to icon view
     set toolbar visible of container window to false
     set statusbar visible of container window to false
+    try
+      set pathbar visible of container window to false
+    end try
     set bounds of container window to {100, 100, 860, 540}
     set theViewOptions to the icon view options of container window
     set arrangement of theViewOptions to not arranged
