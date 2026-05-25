@@ -248,7 +248,7 @@ h1 {
   right: clamp(18px, 2.8vw, 46px);
   left: auto;
   z-index: 4;
-  width: min(430px, 56%);
+  width: min(478px, 60%);
   user-select: none;
   -webkit-user-select: none;
 }
@@ -304,6 +304,18 @@ button.menubar-icon {
   cursor: pointer;
 }
 
+.battery-status-button {
+  cursor: pointer;
+  margin-right: -4px;
+}
+
+.battery-status-button svg {
+  width: 48px;
+  height: 38px;
+  stroke-width: 2.55;
+  transform: scale(1.28);
+}
+
 button.menubar-icon:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.72);
   outline-offset: 3px;
@@ -343,6 +355,22 @@ button.menubar-icon:focus-visible {
 
 .cup-icon-outline {
   display: none;
+}
+
+.battery-icon-low {
+  display: none;
+}
+
+.mac-content.is-low-battery .battery-status-button {
+  color: var(--coral);
+}
+
+.mac-content.is-low-battery .battery-icon-full {
+  display: none;
+}
+
+.mac-content.is-low-battery .battery-icon-low {
+  display: block;
 }
 
 .mac-content.is-awake-off .menubar-icon.active .cup-icon-filled,
@@ -390,7 +418,7 @@ button.menubar-icon:focus-visible {
 .app-menu-row {
   min-height: 64px;
   display: grid;
-  grid-template-columns: 40px 1fr 62px;
+  grid-template-columns: 40px minmax(0, 1fr) 62px;
   align-items: center;
   gap: 16px;
   border-radius: 18px;
@@ -407,8 +435,15 @@ button.menubar-icon:focus-visible {
 }
 
 .app-menu-action {
-  grid-template-columns: 40px 1fr auto;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
   min-height: 64px;
+}
+
+.app-menu-action > span:nth-child(2) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-menu-version {
@@ -419,8 +454,42 @@ button.menubar-icon:focus-visible {
   white-space: nowrap;
 }
 
+.app-menu-warning {
+  display: none;
+}
+
+.mac-content.is-low-battery .app-menu-warning {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  min-height: 58px;
+  margin: 4px 0;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 154, 132, 0.26);
+  border-radius: 18px;
+  background: rgba(255, 154, 132, 0.13);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(16px, 1.45vw, 21px);
+  font-weight: 500;
+  line-height: 1.18;
+  justify-items: start;
+}
+
+.app-menu-warning svg {
+  width: 24px;
+  height: 22px;
+  justify-self: center;
+  color: var(--coral);
+  fill: currentColor;
+  stroke: rgba(18, 16, 21, 0.78);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .app-lock-sleep-row {
-  grid-template-columns: 40px 1fr auto;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
 }
 
 .app-lock-controls {
@@ -1935,7 +2004,7 @@ h2 {
 
   .app-menu-row {
     min-height: 56px;
-    grid-template-columns: 34px 1fr 56px;
+    grid-template-columns: 34px minmax(0, 1fr) 52px;
     gap: 10px;
     border-radius: 14px;
     padding: 0 12px;
@@ -1943,8 +2012,36 @@ h2 {
   }
 
   .app-menu-action {
-    grid-template-columns: 34px 1fr;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
     min-height: 56px;
+  }
+
+  .app-lock-sleep-row {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+  }
+
+  .app-lock-controls {
+    gap: 8px;
+  }
+
+  .app-lock-circle {
+    width: 28px;
+    height: 28px;
+  }
+
+  .app-menu-warning {
+    grid-template-columns: 27px minmax(0, 1fr);
+    gap: 7px;
+    min-height: 52px;
+    padding: 0 12px;
+    border-radius: 14px;
+    font-size: 15px;
+    justify-items: start;
+  }
+
+  .app-menu-warning svg {
+    width: 24px;
+    height: 22px;
   }
 
   .app-menu-setting {
@@ -1979,7 +2076,7 @@ h2 {
   }
 
   .app-switch {
-    width: 52px;
+    width: 48px;
     height: 28px;
   }
 
@@ -1991,7 +2088,42 @@ h2 {
   }
 
   .app-switch-input:checked + .app-switch-track::after {
-    transform: translateX(24px);
+    transform: translateX(20px);
+  }
+
+  .update-dialog-overlay {
+    padding: 18px;
+  }
+
+  .update-dialog {
+    width: min(calc(100% - 52px), 350px);
+    padding: 24px 22px 20px;
+    border-radius: 26px;
+  }
+
+  .update-dialog-icon {
+    width: 58px;
+    height: 58px;
+    margin-bottom: 24px;
+    border-radius: 16px;
+  }
+
+  .update-dialog h2 {
+    margin-bottom: 12px;
+    font-size: 22px;
+  }
+
+  .update-dialog p {
+    max-width: 270px;
+    margin-bottom: 22px;
+    font-size: 18px;
+    line-height: 1.18;
+  }
+
+  .update-dialog-button {
+    min-height: 44px;
+    border-radius: 19px;
+    font-size: 18px;
   }
 
   .section {
@@ -2129,15 +2261,51 @@ h2 {
 
   .app-menu-row {
     min-height: 50px;
-    grid-template-columns: 30px 1fr 48px;
+    grid-template-columns: 30px minmax(0, 1fr) 44px;
     gap: 8px;
     padding: 0 10px;
     font-size: 14px;
   }
 
   .app-menu-action {
-    grid-template-columns: 30px 1fr;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
     min-height: 50px;
+  }
+
+  .app-lock-sleep-row {
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+  }
+
+  .app-lock-controls {
+    gap: 6px;
+  }
+
+  .app-lock-circle {
+    width: 25px;
+    height: 25px;
+  }
+
+  .app-lock-circle svg {
+    width: 11px;
+    height: 16px;
+  }
+
+  .app-menu-version {
+    font-size: 12px;
+  }
+
+  .app-menu-warning {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 6px;
+    min-height: 48px;
+    padding: 0 10px;
+    border-radius: 14px;
+    font-size: 14px;
+  }
+
+  .app-menu-warning svg {
+    width: 22px;
+    height: 20px;
   }
 
   .app-menu-setting {
@@ -2173,7 +2341,7 @@ h2 {
   }
 
   .app-switch {
-    width: 46px;
+    width: 42px;
     height: 25px;
   }
 
@@ -2183,7 +2351,42 @@ h2 {
   }
 
   .app-switch-input:checked + .app-switch-track::after {
-    transform: translateX(21px);
+    transform: translateX(17px);
+  }
+
+  .update-dialog-overlay {
+    padding: 14px;
+  }
+
+  .update-dialog {
+    width: min(calc(100% - 54px), 320px);
+    padding: 22px 18px 18px;
+    border-radius: 24px;
+  }
+
+  .update-dialog-icon {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 22px;
+    border-radius: 15px;
+  }
+
+  .update-dialog h2 {
+    margin-bottom: 10px;
+    font-size: 20px;
+  }
+
+  .update-dialog p {
+    max-width: 245px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    line-height: 1.2;
+  }
+
+  .update-dialog-button {
+    min-height: 42px;
+    border-radius: 18px;
+    font-size: 17px;
   }
 
   .not-found-page {

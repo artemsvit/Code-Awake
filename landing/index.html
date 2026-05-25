@@ -120,11 +120,6 @@
             </span>
             <span class="menubar-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
-                <path d="m8 3 4 8 5-5 5 15H2L8 3z"></path>
-              </svg>
-            </span>
-            <span class="menubar-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
                 <path d="M4 21v-7"></path>
                 <path d="M4 10V3"></path>
                 <path d="M12 21v-9"></path>
@@ -150,6 +145,21 @@
                 <path d="M12 20h.01"></path>
               </svg>
             </span>
+            <button class="menubar-icon battery-status-button" type="button" aria-label="Toggle low battery preview" aria-pressed="false">
+              <svg class="battery-icon-full" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="2.5" y="7.5" width="17" height="9" rx="2.2"></rect>
+                <path d="M21 10.2v3.6"></path>
+                <path d="M6 10.5v3"></path>
+                <path d="M9 10.5v3"></path>
+                <path d="M12 10.5v3"></path>
+                <path d="M15 10.5v3"></path>
+              </svg>
+              <svg class="battery-icon-low" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="2.5" y="7.5" width="17" height="9" rx="2.2"></rect>
+                <path d="M21 10.2v3.6"></path>
+                <path d="M6 10.5v3"></path>
+              </svg>
+            </button>
           </div>
 
             <div class="app-menu-card" id="hero-app-menu" aria-label="Code Awake opened menu">
@@ -167,6 +177,14 @@
                   <input class="app-switch-input" type="checkbox" aria-label="Keep Mac Awake" checked>
                   <span class="app-switch-track" aria-hidden="true"></span>
                 </label>
+              </div>
+
+              <div class="app-menu-warning" role="note">
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M7.05 1.67c.42-.73 1.48-.73 1.9 0l6.38 11.05c.42.73-.1 1.64-.95 1.64H1.62c-.85 0-1.37-.91-.95-1.64L7.05 1.67Z"></path>
+                  <path d="M8 5.05v4.15M8 11.78v.08"></path>
+                </svg>
+                <span>Paused: Battery below 10%.</span>
               </div>
 
               <div class="app-menu-row app-lock-sleep-row">

@@ -10,6 +10,7 @@ const timerOptionButtons = document.querySelectorAll(".app-timer-options button"
 const updateButton = document.querySelector(".app-update-action");
 const quitButton = document.querySelector(".app-quit-action");
 const lockButton = document.querySelector(".app-lock-action");
+const batteryButton = document.querySelector(".battery-status-button");
 const screenSaverOverlay = document.querySelector("#screen-saver-overlay");
 const updateDialogOverlay = document.querySelector("#update-dialog-overlay");
 const updateDialog = document.querySelector(".update-dialog");
@@ -29,6 +30,22 @@ if ("scrollRestoration" in history) {
 
 const syncAwakePreviewState = () => {
   macContent?.classList.toggle("is-awake-off", !keepAwakeInput?.checked);
+};
+
+const setLowBatteryPreview = (isLowBattery) => {
+  if (!macContent || !batteryButton) {
+    return;
+  }
+
+  macContent.classList.toggle("is-low-battery", isLowBattery);
+  batteryButton.setAttribute("aria-pressed", String(isLowBattery));
+
+  if (isLowBattery && keepAwakeInput) {
+    keepAwakeInput.checked = false;
+    stopTimer();
+  }
+
+  syncAwakePreviewState();
 };
 
 const scrollToTop = () => {
@@ -232,6 +249,10 @@ timerOptionButtons.forEach((optionButton) => {
 });
 
 keepAwakeInput?.addEventListener("change", () => {
+  if (keepAwakeInput.checked) {
+    setLowBatteryPreview(false);
+  }
+
   syncAwakePreviewState();
 
   if (keepAwakeInput.checked) {
@@ -240,6 +261,10 @@ keepAwakeInput?.addEventListener("change", () => {
   }
 
   stopTimer();
+});
+
+batteryButton?.addEventListener("click", () => {
+  setLowBatteryPreview(!macContent?.classList.contains("is-low-battery"));
 });
 
 lockSleepInput?.addEventListener("change", () => {

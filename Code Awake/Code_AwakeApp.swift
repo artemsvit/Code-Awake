@@ -125,6 +125,10 @@ private struct CodeAwakeMenuPanel: View {
                 action: { awakeController.setKeepAwakeEnabled(!awakeController.keepAwakeEnabled) }
             )
 
+            if let errorMessage = awakeController.errorMessage {
+                MenuWarningBanner(errorMessage)
+            }
+
             MenuLockSleepRow(
                 isEnabled: awakeController.preventLockAndSleepEnabled,
                 toggleAction: {
@@ -132,10 +136,6 @@ private struct CodeAwakeMenuPanel: View {
                 },
                 lockAction: lockScreenAction
             )
-
-            if let errorMessage = awakeController.errorMessage {
-                MenuErrorText(errorMessage)
-            }
 
             MenuTimerRow(
                 title: "Auto Turn Off",
@@ -487,6 +487,41 @@ private struct MenuErrorText: View {
             .foregroundStyle(Color(red: 1.0, green: 0.65, blue: 0.56))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 9)
+    }
+}
+
+private struct MenuWarningBanner: View {
+    let message: String
+
+    init(_ message: String) {
+        self.message = message
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 9) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Color(red: 1.0, green: 0.62, blue: 0.52))
+                .frame(width: 24)
+
+            Text(message)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.90))
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 9)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color(red: 1.0, green: 0.62, blue: 0.52).opacity(0.14))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color(red: 1.0, green: 0.62, blue: 0.52).opacity(0.26), lineWidth: 1)
+        )
+        .padding(.horizontal, 7)
     }
 }
 
