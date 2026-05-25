@@ -20,3 +20,5 @@ landing/app/appcast.xml
 *.provisionprofile
 AuthKey_*.p8
 Config/LocalSigning.xcconfig
+
+.wrangler/
