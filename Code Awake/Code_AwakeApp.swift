@@ -18,11 +18,18 @@ struct Code_AwakeApp: App {
     private let updaterController: SPUStandardUpdaterController
 
     init() {
-        updaterController = SPUStandardUpdaterController(
+        let controller = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: nil,
             userDriverDelegate: nil
         )
+        controller.updater.automaticallyChecksForUpdates = true
+        controller.updater.updateCheckInterval = 60 * 60 * 6
+        updaterController = controller
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            controller.updater.checkForUpdatesInBackground()
+        }
     }
 
     var body: some Scene {

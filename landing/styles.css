@@ -443,7 +443,6 @@ button.menubar-icon:focus-visible {
 .app-lock-circle:hover,
 .app-lock-circle:focus-visible {
   background: rgba(255, 255, 255, 0.18);
-  transform: translateY(-1px);
   outline: none;
 }
 

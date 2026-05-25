@@ -32,6 +32,10 @@
 	<true/>
 	<key>SUEnableInstallerLauncherService</key>
 	<true/>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>21600</integer>
 	<key>SUFeedURL</key>
 	<string>https://github.com/artemsvit/Code-Awake/releases/latest/download/appcast.xml</string>
 	<key>SUPublicEDKey</key>
