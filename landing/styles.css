@@ -411,6 +411,48 @@ button.menubar-icon:focus-visible {
   min-height: 64px;
 }
 
+.app-lock-sleep-row {
+  grid-template-columns: 40px 1fr auto;
+}
+
+.app-lock-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-lock-circle {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: transform 160ms ease, opacity 160ms ease, background 160ms ease;
+}
+
+.app-lock-circle svg {
+  width: 14px;
+  height: 19px;
+  fill: currentColor;
+}
+
+.app-lock-circle:hover,
+.app-lock-circle:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.app-lock-sleep-row:not(:has(.app-switch-input:checked)) .app-lock-circle {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.7);
+}
+
 a.app-menu-action,
 button.app-menu-action {
   width: 100%;

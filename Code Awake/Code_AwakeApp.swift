@@ -118,6 +118,14 @@ private struct CodeAwakeMenuPanel: View {
                 action: { awakeController.setKeepAwakeEnabled(!awakeController.keepAwakeEnabled) }
             )
 
+            MenuLockSleepRow(
+                isEnabled: awakeController.preventLockAndSleepEnabled,
+                toggleAction: {
+                    awakeController.setPreventLockAndSleepEnabled(!awakeController.preventLockAndSleepEnabled)
+                },
+                lockAction: lockScreenAction
+            )
+
             if let errorMessage = awakeController.errorMessage {
                 MenuErrorText(errorMessage)
             }
@@ -133,8 +141,6 @@ private struct CodeAwakeMenuPanel: View {
                     awakeController.setKeepAwakeOffTimerMinutes(selectedMinutes)
                 }
             )
-
-            MenuActionRow(title: "Lock Screen Now", icon: "lock", action: lockScreenAction)
 
             Divider()
                 .overlay(.white.opacity(0.10))
@@ -214,6 +220,61 @@ private struct MenuToggleRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    private var iconColor: Color {
+        isEnabled ? Color(red: 1.0, green: 0.62, blue: 0.52) : .white.opacity(0.70)
+    }
+}
+
+private struct MenuLockSleepRow: View {
+    let isEnabled: Bool
+    let toggleAction: () -> Void
+    let lockAction: () -> Void
+
+    var body: some View {
+        HStack(spacing: 9) {
+            Button(action: toggleAction) {
+                HStack(spacing: 9) {
+                    Image(systemName: "lock")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(iconColor)
+                        .frame(width: 24)
+
+                    Text("Lock & Sleep")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+
+            if isEnabled {
+                Button(action: lockAction) {
+                    Image(systemName: "lock")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.92))
+                        .frame(width: 24, height: 24)
+                        .background(.white.opacity(0.12))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .transition(.scale.combined(with: .opacity))
+            }
+
+            Button(action: toggleAction) {
+                AwakeSwitch(isEnabled: isEnabled)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 9)
+        .frame(height: 36)
+        .animation(.easeOut(duration: 0.16), value: isEnabled)
     }
 
     private var iconColor: Color {

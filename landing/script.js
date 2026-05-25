@@ -2,6 +2,7 @@ const revealItems = document.querySelectorAll(".reveal");
 const menuToggle = document.querySelector(".mac-menubar .menubar-icon.active");
 const macContent = document.querySelector(".mac-content");
 const keepAwakeInput = document.querySelector('.app-switch-input[aria-label="Keep Mac Awake"]');
+const lockSleepInput = document.querySelector('.app-switch-input[aria-label="Lock & Sleep"]');
 const timerButton = document.querySelector(".app-menu-setting");
 const timerOptions = document.querySelector(".app-timer-options");
 const timerValue = document.querySelector(".app-menu-value");
@@ -239,6 +240,12 @@ keepAwakeInput?.addEventListener("change", () => {
   }
 
   stopTimer();
+});
+
+lockSleepInput?.addEventListener("change", () => {
+  if (!lockSleepInput.checked) {
+    setScreenSaverActive(false);
+  }
 });
 
 updateButton?.addEventListener("click", () => {

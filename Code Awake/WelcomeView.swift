@@ -126,7 +126,13 @@ struct WelcomeView: View {
                 )
 
                 UseCaseRow(
-                    icon: "power.circle",
+                    icon: "lock",
+                    title: "Optional Lock & Sleep",
+                    detail: "Prevent display sleep when needed, or follow your macOS display timing."
+                )
+
+                UseCaseRow(
+                    icon: "arrow.up.forward.app",
                     title: "Launch at Login",
                     detail: "Start Code Awake automatically and keep it ready in the menu bar."
                 )

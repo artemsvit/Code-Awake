@@ -12,6 +12,7 @@ import IOKit.ps
 
 final class AwakeController: ObservableObject {
     @Published private(set) var keepAwakeEnabled = false
+    @Published private(set) var preventLockAndSleepEnabled = false
     @Published private(set) var keepAwakeOffTimerMinutes = 0
     @Published private(set) var keepAwakeRemainingSeconds = 0
     @Published private(set) var errorMessage: String?
@@ -21,6 +22,7 @@ final class AwakeController: ObservableObject {
     }
 
     private let keepAwakeDefaultsKey = "keepAwakeEnabled"
+    private let preventLockAndSleepDefaultsKey = "preventLockAndSleepEnabled"
     private let keepAwakeOffTimerDefaultsKey = "keepAwakeOffTimerMinutes"
     private let lowBatteryThreshold = 10
     static let offTimerOptions = [0, 30, 60, 120, 180, 240, 360, 480, 720]
@@ -32,9 +34,13 @@ final class AwakeController: ObservableObject {
         (kIOPMAssertPreventUserIdleSystemSleep, "Code Awake - Prevent idle system sleep" as CFString),
         (kIOPMAssertNetworkClientActive, "Code Awake - Keep network clients active" as CFString)
     ]
+    private let displaySleepAssertions: [(type: String, reason: CFString)] = [
+        (kIOPMAssertionTypeNoDisplaySleep, "Code Awake - Prevent display sleep and lock timing" as CFString)
+    ]
 
     init() {
         keepAwakeEnabled = UserDefaults.standard.bool(forKey: keepAwakeDefaultsKey)
+        preventLockAndSleepEnabled = UserDefaults.standard.bool(forKey: preventLockAndSleepDefaultsKey)
         keepAwakeOffTimerMinutes = UserDefaults.standard.integer(forKey: keepAwakeOffTimerDefaultsKey)
         _ = updateAssertions()
     }
@@ -49,6 +55,13 @@ final class AwakeController: ObservableObject {
     func setKeepAwakeEnabled(_ isEnabled: Bool) -> Bool {
         keepAwakeEnabled = isEnabled
         UserDefaults.standard.set(isEnabled, forKey: keepAwakeDefaultsKey)
+        return updateAssertions()
+    }
+
+    @discardableResult
+    func setPreventLockAndSleepEnabled(_ isEnabled: Bool) -> Bool {
+        preventLockAndSleepEnabled = isEnabled
+        UserDefaults.standard.set(isEnabled, forKey: preventLockAndSleepDefaultsKey)
         return updateAssertions()
     }
 
@@ -100,7 +113,9 @@ final class AwakeController: ObservableObject {
     private func createAssertions() -> Bool {
         releaseAssertions()
 
-        for assertion in assertions {
+        let activeAssertions = preventLockAndSleepEnabled ? assertions + displaySleepAssertions : assertions
+
+        for assertion in activeAssertions {
             var assertionID = IOPMAssertionID(0)
             let result = IOPMAssertionCreateWithName(
                 assertion.type as CFString,
