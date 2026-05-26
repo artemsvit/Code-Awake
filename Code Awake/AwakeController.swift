@@ -9,10 +9,11 @@ import Foundation
 import Combine
 import IOKit.pwr_mgt
 import IOKit.ps
+import IOKit.graphics
 
 final class AwakeController: ObservableObject {
     @Published private(set) var keepAwakeEnabled = false
-    @Published private(set) var preventLockAndSleepEnabled = false
+    @Published private(set) var allowLockAndSleepEnabled = false
     @Published private(set) var keepAwakeOffTimerMinutes = 0
     @Published private(set) var keepAwakeRemainingSeconds = 0
     @Published private(set) var errorMessage: String?
@@ -22,13 +23,31 @@ final class AwakeController: ObservableObject {
     }
 
     private let keepAwakeDefaultsKey = "keepAwakeEnabled"
-    private let preventLockAndSleepDefaultsKey = "preventLockAndSleepEnabled"
+    private let allowLockAndSleepDefaultsKey = "allowLockAndSleepEnabled"
     private let keepAwakeOffTimerDefaultsKey = "keepAwakeOffTimerMinutes"
     private let lowBatteryThreshold = 10
+    private let displayDimDelay: TimeInterval = 60
+    private let displayActivityPollInterval: TimeInterval = 0.5
+    private let displayActivityRestoreIdleThreshold: TimeInterval = 1.5
+    private let displayDimMinimumRescheduleDelay: TimeInterval = 0.5
+    private let dimmedDisplayBrightness: Float = 0.1
     static let offTimerOptions = [0, 30, 60, 120, 180, 240, 360, 480, 720]
     private var assertionIDs: [IOPMAssertionID] = []
     private var offTimer: Timer?
     private var batteryMonitorTimer: Timer?
+    private var displayDimTimer: Timer?
+    private var displayActivityTimer: Timer?
+    private var originalDisplayBrightnessValues: [Float]?
+    private var batteryProtectionPolicy: BatteryProtectionPolicy {
+        BatteryProtectionPolicy(lowBatteryThreshold: lowBatteryThreshold)
+    }
+    private var displayDimPolicy: DisplayDimPolicy {
+        DisplayDimPolicy(
+            dimDelay: displayDimDelay,
+            activityRestoreIdleThreshold: displayActivityRestoreIdleThreshold,
+            minimumRescheduleDelay: displayDimMinimumRescheduleDelay
+        )
+    }
     private let assertions: [(type: String, reason: CFString)] = [
         (kIOPMAssertionTypePreventSystemSleep, "Code Awake - Prevent system sleep" as CFString),
         (kIOPMAssertPreventUserIdleSystemSleep, "Code Awake - Prevent idle system sleep" as CFString),
@@ -40,7 +59,7 @@ final class AwakeController: ObservableObject {
 
     init() {
         keepAwakeEnabled = UserDefaults.standard.bool(forKey: keepAwakeDefaultsKey)
-        preventLockAndSleepEnabled = UserDefaults.standard.bool(forKey: preventLockAndSleepDefaultsKey)
+        allowLockAndSleepEnabled = UserDefaults.standard.bool(forKey: allowLockAndSleepDefaultsKey)
         keepAwakeOffTimerMinutes = UserDefaults.standard.integer(forKey: keepAwakeOffTimerDefaultsKey)
         _ = updateAssertions()
     }
@@ -49,6 +68,8 @@ final class AwakeController: ObservableObject {
         releaseAssertions()
         cancelOffTimer()
         stopBatteryMonitor()
+        cancelDisplayDimTimer(restoreBrightness: true)
+        stopDisplayActivityMonitor()
     }
 
     @discardableResult
@@ -59,9 +80,9 @@ final class AwakeController: ObservableObject {
     }
 
     @discardableResult
-    func setPreventLockAndSleepEnabled(_ isEnabled: Bool) -> Bool {
-        preventLockAndSleepEnabled = isEnabled
-        UserDefaults.standard.set(isEnabled, forKey: preventLockAndSleepDefaultsKey)
+    func setAllowLockAndSleepEnabled(_ isEnabled: Bool) -> Bool {
+        allowLockAndSleepEnabled = isEnabled
+        UserDefaults.standard.set(isEnabled, forKey: allowLockAndSleepDefaultsKey)
         return updateAssertions()
     }
 
@@ -83,6 +104,7 @@ final class AwakeController: ObservableObject {
                 releaseAssertions()
                 cancelOffTimer()
                 stopBatteryMonitor()
+                cancelDisplayDimTimer(restoreBrightness: true)
                 return false
             }
 
@@ -93,11 +115,13 @@ final class AwakeController: ObservableObject {
                 UserDefaults.standard.set(false, forKey: keepAwakeDefaultsKey)
                 cancelOffTimer()
                 stopBatteryMonitor()
+                cancelDisplayDimTimer(restoreBrightness: true)
             }
 
             if didCreateAssertions {
                 scheduleOffTimer()
                 startBatteryMonitor()
+                updateDisplayDimming()
             }
 
             return didCreateAssertions
@@ -106,6 +130,7 @@ final class AwakeController: ObservableObject {
         releaseAssertions()
         cancelOffTimer()
         stopBatteryMonitor()
+        cancelDisplayDimTimer(restoreBrightness: true)
         errorMessage = nil
         return true
     }
@@ -113,7 +138,7 @@ final class AwakeController: ObservableObject {
     private func createAssertions() -> Bool {
         releaseAssertions()
 
-        let activeAssertions = preventLockAndSleepEnabled ? assertions + displaySleepAssertions : assertions
+        let activeAssertions = allowLockAndSleepEnabled ? assertions : assertions + displaySleepAssertions
 
         for assertion in activeAssertions {
             var assertionID = IOPMAssertionID(0)
@@ -173,6 +198,226 @@ final class AwakeController: ObservableObject {
         keepAwakeRemainingSeconds = 0
     }
 
+    private func updateDisplayDimming() {
+        if displayDimPolicy.shouldManageDimming(
+            keepAwakeEnabled: keepAwakeEnabled,
+            allowLockAndSleepEnabled: allowLockAndSleepEnabled
+        ) {
+            scheduleDisplayDimTimer()
+        } else {
+            cancelDisplayDimTimer(restoreBrightness: true)
+        }
+    }
+
+    private func scheduleDisplayDimTimer() {
+        cancelDisplayDimTimer(restoreBrightness: true)
+
+        displayDimTimer = Timer.scheduledTimer(
+            withTimeInterval: displayDimPolicy.delayUntilDim(currentIdleTime: currentSystemIdleTime()),
+            repeats: false
+        ) { [weak self] _ in
+            self?.dimDisplays()
+        }
+    }
+
+    private func cancelDisplayDimTimer(restoreBrightness: Bool) {
+        displayDimTimer?.invalidate()
+        displayDimTimer = nil
+        stopDisplayActivityMonitor()
+
+        if restoreBrightness {
+            restoreDisplayBrightness()
+        }
+    }
+
+    private func dimDisplays() {
+        guard displayDimPolicy.shouldManageDimming(
+            keepAwakeEnabled: keepAwakeEnabled,
+            allowLockAndSleepEnabled: allowLockAndSleepEnabled
+        ) else {
+            return
+        }
+
+        guard displayDimPolicy.shouldDimNow(currentIdleTime: currentSystemIdleTime()) else {
+            scheduleDisplayDimTimer()
+            return
+        }
+
+        if originalDisplayBrightnessValues == nil {
+            let brightnessValues = currentDisplayBrightnessValues()
+
+            guard !brightnessValues.isEmpty else {
+                return
+            }
+
+            originalDisplayBrightnessValues = brightnessValues
+        }
+
+        setDisplayBrightness(dimmedDisplayBrightness)
+        startDisplayActivityMonitor()
+    }
+
+    private func startDisplayActivityMonitor() {
+        stopDisplayActivityMonitor()
+
+        displayActivityTimer = Timer.scheduledTimer(
+            withTimeInterval: displayActivityPollInterval,
+            repeats: true
+        ) { [weak self] _ in
+            self?.restoreBrightnessAfterDisplayActivity()
+        }
+    }
+
+    private func stopDisplayActivityMonitor() {
+        displayActivityTimer?.invalidate()
+        displayActivityTimer = nil
+    }
+
+    private func restoreBrightnessAfterDisplayActivity() {
+        let hasStoredBrightness = originalDisplayBrightnessValues != nil
+
+        guard displayDimPolicy.shouldRestoreBrightness(
+            hasStoredBrightness: hasStoredBrightness,
+            currentIdleTime: currentSystemIdleTime()
+        ) else {
+            if !hasStoredBrightness {
+                stopDisplayActivityMonitor()
+            }
+
+            return
+        }
+
+        stopDisplayActivityMonitor()
+        restoreDisplayBrightness()
+
+        if displayDimPolicy.shouldManageDimming(
+            keepAwakeEnabled: keepAwakeEnabled,
+            allowLockAndSleepEnabled: allowLockAndSleepEnabled
+        ) {
+            scheduleDisplayDimTimer()
+        }
+    }
+
+    private func currentSystemIdleTime() -> TimeInterval? {
+        let service = IOServiceGetMatchingService(
+            kIOMainPortDefault,
+            IOServiceMatching("IOHIDSystem")
+        )
+
+        guard service != 0 else {
+            return nil
+        }
+
+        defer {
+            IOObjectRelease(service)
+        }
+
+        guard let property = IORegistryEntryCreateCFProperty(
+            service,
+            "HIDIdleTime" as CFString,
+            kCFAllocatorDefault,
+            0
+        )?.takeRetainedValue() as? NSNumber else {
+            return nil
+        }
+
+        return TimeInterval(property.uint64Value) / 1_000_000_000
+    }
+
+    private func restoreDisplayBrightness() {
+        guard let originalDisplayBrightnessValues else {
+            return
+        }
+
+        var restoreIndex = 0
+
+        withDisplayServices { service in
+            guard restoreIndex < originalDisplayBrightnessValues.count else {
+                return
+            }
+
+            var currentBrightness: Float = 0
+
+            guard IODisplayGetFloatParameter(
+                service,
+                0,
+                kIODisplayBrightnessKey as CFString,
+                &currentBrightness
+            ) == kIOReturnSuccess else {
+                return
+            }
+
+            IODisplaySetFloatParameter(
+                service,
+                0,
+                kIODisplayBrightnessKey as CFString,
+                originalDisplayBrightnessValues[restoreIndex]
+            )
+            restoreIndex += 1
+        }
+
+        self.originalDisplayBrightnessValues = nil
+    }
+
+    private func currentDisplayBrightnessValues() -> [Float] {
+        var brightnessValues: [Float] = []
+
+        withDisplayServices { service in
+            var brightness: Float = 0
+
+            guard IODisplayGetFloatParameter(
+                service,
+                0,
+                kIODisplayBrightnessKey as CFString,
+                &brightness
+            ) == kIOReturnSuccess else {
+                return
+            }
+
+            brightnessValues.append(brightness)
+        }
+
+        return brightnessValues
+    }
+
+    private func setDisplayBrightness(_ brightness: Float) {
+        let clampedBrightness = min(max(brightness, 0), 1)
+
+        withDisplayServices { service in
+            IODisplaySetFloatParameter(
+                service,
+                0,
+                kIODisplayBrightnessKey as CFString,
+                clampedBrightness
+            )
+        }
+    }
+
+    private func withDisplayServices(_ body: (io_service_t) -> Void) {
+        var iterator: io_iterator_t = 0
+        let result = IOServiceGetMatchingServices(
+            kIOMainPortDefault,
+            IOServiceMatching("IODisplayConnect"),
+            &iterator
+        )
+
+        guard result == kIOReturnSuccess else {
+            return
+        }
+
+        defer {
+            IOObjectRelease(iterator)
+        }
+
+        var service = IOIteratorNext(iterator)
+
+        while service != 0 {
+            body(service)
+            IOObjectRelease(service)
+            service = IOIteratorNext(iterator)
+        }
+    }
+
     private func startBatteryMonitor() {
         stopBatteryMonitor()
 
@@ -199,6 +444,7 @@ final class AwakeController: ObservableObject {
         releaseAssertions()
         cancelOffTimer()
         stopBatteryMonitor()
+        cancelDisplayDimTimer(restoreBrightness: true)
     }
 
     private func shouldAllowAwakeSession() -> Bool {
@@ -206,11 +452,14 @@ final class AwakeController: ObservableObject {
             return true
         }
 
-        guard batteryState.isOnBatteryPower, batteryState.percent <= lowBatteryThreshold else {
+        guard batteryProtectionPolicy.shouldPauseAwakeMode(
+            percent: batteryState.percent,
+            isOnBatteryPower: batteryState.isOnBatteryPower
+        ) else {
             return true
         }
 
-        errorMessage = "Awake mode turned off because battery is below \(lowBatteryThreshold)%."
+        errorMessage = batteryProtectionPolicy.pauseMessage
         return false
     }
 

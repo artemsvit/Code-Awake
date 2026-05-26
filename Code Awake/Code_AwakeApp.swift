@@ -27,8 +27,10 @@ struct Code_AwakeApp: App {
         controller.updater.updateCheckInterval = 60 * 60 * 6
         updaterController = controller
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            controller.updater.checkForUpdatesInBackground()
+        if !RuntimeEnvironment.isRunningTests() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                Self.checkForUpdatesOnLaunch(controller.updater)
+            }
         }
     }
 
@@ -37,7 +39,7 @@ struct Code_AwakeApp: App {
             CodeAwakeMenuPanel(
                 awakeController: awakeController,
                 launchAtLoginController: launchAtLoginController,
-                updateAction: { updaterController.checkForUpdates(nil) },
+                updateAction: checkForUpdatesManually,
                 lockScreenAction: lockScreenNow,
                 donateAction: openDonatePage,
                 quitAction: { NSApp.terminate(nil) }
@@ -55,6 +57,14 @@ struct Code_AwakeApp: App {
             CommandGroup(replacing: .appInfo) { }
             CommandGroup(replacing: .newItem) { }
         }
+    }
+
+    private static func checkForUpdatesOnLaunch(_ updater: SPUUpdater) {
+        updater.checkForUpdatesInBackground()
+    }
+
+    private func checkForUpdatesManually() {
+        updaterController.checkForUpdates(nil)
     }
 
     private var menuTitle: String {
@@ -130,9 +140,9 @@ private struct CodeAwakeMenuPanel: View {
             }
 
             MenuLockSleepRow(
-                isEnabled: awakeController.preventLockAndSleepEnabled,
+                isEnabled: awakeController.allowLockAndSleepEnabled,
                 toggleAction: {
-                    awakeController.setPreventLockAndSleepEnabled(!awakeController.preventLockAndSleepEnabled)
+                    awakeController.setAllowLockAndSleepEnabled(!awakeController.allowLockAndSleepEnabled)
                 },
                 lockAction: lockScreenAction
             )
@@ -431,46 +441,15 @@ private struct MenuTimerRow: View {
     }
 
     private func optionLabel(for minutes: Int) -> String {
-        guard minutes > 0 else {
-            return "Infinity"
-        }
-
-        return "After \(durationLabel(for: minutes))"
+        AutoTurnOffFormatter.optionLabel(for: minutes)
     }
 
     private func shortLabel(for minutes: Int) -> String {
-        guard minutes > 0 else {
-            return "Infinity"
-        }
-
-        return durationLabel(for: minutes)
+        AutoTurnOffFormatter.shortLabel(for: minutes)
     }
 
     private func countdownLabel(for seconds: Int) -> String {
-        let hours = max(0, seconds) / 3600
-        let minutes = (max(0, seconds) % 3600) / 60
-        let remainingSeconds = max(0, seconds) % 60
-
-        if hours > 0 {
-            return "\(hours):\(String(format: "%02d", minutes)):\(String(format: "%02d", remainingSeconds))"
-        }
-
-        return "\(minutes):\(String(format: "%02d", remainingSeconds))"
-    }
-
-    private func durationLabel(for minutes: Int) -> String {
-        guard minutes >= 60 else {
-            return "\(minutes) min"
-        }
-
-        let hours = minutes / 60
-        let remainingMinutes = minutes % 60
-
-        if remainingMinutes == 0 {
-            return "\(hours)h"
-        }
-
-        return "\(hours)h \(remainingMinutes)m"
+        AutoTurnOffFormatter.countdownLabel(for: seconds)
     }
 }
 
@@ -498,30 +477,31 @@ private struct MenuWarningBanner: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 9) {
+        HStack(alignment: .center, spacing: 7) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(Color(red: 1.0, green: 0.62, blue: 0.52))
-                .frame(width: 24)
+                .symbolRenderingMode(.hierarchical)
+                .frame(width: 22)
 
             Text(message)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.90))
-                .lineLimit(3)
-                .fixedSize(horizontal: false, vertical: true)
+                .foregroundStyle(.white.opacity(0.92))
+                .lineLimit(1)
+                .minimumScaleFactor(0.86)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 9)
-        .padding(.vertical, 9)
+        .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+        .padding(.horizontal, 10)
         .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(Color(red: 1.0, green: 0.62, blue: 0.52).opacity(0.14))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(Color(red: 1.0, green: 0.62, blue: 0.52).opacity(0.26), lineWidth: 1)
         )
         .padding(.horizontal, 7)
+        .padding(.vertical, 2)
     }
 }
 
@@ -530,6 +510,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var welcomeWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        guard !RuntimeEnvironment.isRunningTests() else {
+            return
+        }
+
         guard !UserDefaults.standard.bool(forKey: hasCompletedWelcomeKey) else {
             return
         }
@@ -545,7 +529,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 900, height: 560),
+            contentRect: NSRect(x: 0, y: 0, width: 1040, height: 640),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -559,7 +543,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.backgroundColor = NSColor(red: 0.07, green: 0.07, blue: 0.07, alpha: 1.0)
 
         let hostingView = NSHostingView(rootView: welcomeView.frame(maxWidth: .infinity, maxHeight: .infinity))
-        hostingView.frame = NSRect(x: 0, y: 0, width: 900, height: 560)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 1040, height: 640)
         hostingView.autoresizingMask = [.width, .height]
         window.contentView = hostingView
         window.makeKeyAndOrderFront(nil)

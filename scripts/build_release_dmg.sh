@@ -35,10 +35,13 @@ GITHUB_RELEASE_DMG="$GITHUB_RELEASE_DIR/$GITHUB_DMG_NAME"
 export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
 
 current_build="$(awk -F ' = ' '/CURRENT_PROJECT_VERSION = / {gsub(/;/, "", $2); print $2; exit}' "$ROOT/Code Awake.xcodeproj/project.pbxproj")"
-next_build="$((current_build + 1))"
+if [[ "${CODE_AWAKE_SKIP_BUILD_BUMP:-0}" == "1" ]]; then
+  echo "==> Keeping build number: $current_build"
+else
+  next_build="$((current_build + 1))"
 
-echo "==> Bumping build number: $current_build -> $next_build"
-python3 - <<PY
+  echo "==> Bumping build number: $current_build -> $next_build"
+  python3 - <<PY
 from pathlib import Path
 import re
 
@@ -47,6 +50,7 @@ text = project.read_text()
 text = re.sub(r"CURRENT_PROJECT_VERSION = \\d+;", "CURRENT_PROJECT_VERSION = $next_build;", text)
 project.write_text(text)
 PY
+fi
 
 echo "==> Building Release"
 xcodebuild \
@@ -156,7 +160,8 @@ mount_point="$(echo "$mount_output" | awk '/\/Volumes\/Code Awake/ {print substr
 volume_name="$(basename "$mount_point")"
 
 echo "==> Applying Finder layout"
-osascript <<OSA
+sleep 1
+if ! osascript <<OSA
 set volumeName to "$volume_name"
 tell application "Finder"
   tell disk volumeName
@@ -182,6 +187,9 @@ tell application "Finder"
   end tell
 end tell
 OSA
+then
+  echo "Warning: Finder layout failed. Continuing with a plain DMG layout." >&2
+fi
 
 sync
 hdiutil detach "$mount_point"

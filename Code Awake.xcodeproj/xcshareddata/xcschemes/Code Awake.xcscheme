@@ -21,6 +21,20 @@
                ReferencedContainer = "container:Code Awake.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "F1A0000C2FCDF00100000001"
+               BuildableName = "Code Awake Tests.xctest"
+               BlueprintName = "Code Awake Tests"
+               ReferencedContainer = "container:Code Awake.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -29,7 +43,27 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "F1A0000C2FCDF00100000001"
+               BuildableName = "Code Awake Tests.xctest"
+               BlueprintName = "Code Awake Tests"
+               ReferencedContainer = "container:Code Awake.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "E2690BC52FB70AF700015AE2"
+            BuildableName = "Code Awake.app"
+            BlueprintName = "Code Awake"
+            ReferencedContainer = "container:Code Awake.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"

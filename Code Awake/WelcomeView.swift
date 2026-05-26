@@ -16,7 +16,7 @@ struct WelcomeView: View {
             brandPanel
             useCasesPanel
         }
-        .frame(minWidth: 900, minHeight: 560)
+        .frame(minWidth: 1040, minHeight: 640)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(red: 0.07, green: 0.07, blue: 0.07))
         .ignoresSafeArea()
@@ -84,9 +84,9 @@ struct WelcomeView: View {
             }
             .animation(.easeOut(duration: 0.16), value: isGetStartedHovered)
         }
-        .padding(.horizontal, 44)
-        .padding(.vertical, 44)
-        .frame(width: 430, alignment: .leading)
+        .padding(.horizontal, 52)
+        .padding(.vertical, 52)
+        .frame(width: 500, alignment: .leading)
         .frame(maxHeight: .infinity, alignment: .leading)
         .background(
             LinearGradient(
@@ -105,10 +105,10 @@ struct WelcomeView: View {
             Image("WelcomeUseCase")
                 .resizable()
                 .scaledToFill()
-                .frame(width: 470, height: 300)
+                .frame(width: 540, height: 288)
                 .clipped()
 
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 18) {
                 Text("Features")
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
@@ -128,7 +128,7 @@ struct WelcomeView: View {
                 UseCaseRow(
                     icon: "lock",
                     title: "Optional Lock & Sleep",
-                    detail: "Prevent display sleep when needed, or follow your macOS display timing."
+                    detail: "Choose between keeping the display/session awake or letting macOS lock and sleep the display while work continues."
                 )
 
                 UseCaseRow(
@@ -137,12 +137,13 @@ struct WelcomeView: View {
                     detail: "Start Code Awake automatically and keep it ready in the menu bar."
                 )
             }
-            .padding(.horizontal, 48)
-            .padding(.top, 28)
+            .padding(.horizontal, 56)
+            .padding(.top, 34)
+            .padding(.bottom, 42)
 
             Spacer()
         }
-        .frame(width: 470, alignment: .topLeading)
+        .frame(width: 540, alignment: .topLeading)
         .frame(maxHeight: .infinity, alignment: .topLeading)
         .background(Color(red: 0.10, green: 0.10, blue: 0.10))
     }
@@ -154,24 +155,26 @@ private struct UseCaseRow: View {
     let detail: String
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: 14) {
             Image(systemName: icon)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(Color(red: 1.0, green: 0.65, blue: 0.56))
-                .frame(width: 26, height: 26)
+                .frame(width: 30, height: 30)
                 .background(.white.opacity(0.08))
-                .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
 
                 Text(detail)
-                    .font(.system(size: 12, weight: .regular))
+                    .font(.system(size: 13, weight: .regular))
                     .foregroundStyle(.white.opacity(0.62))
-                    .lineLimit(2)
+                    .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            .layoutPriority(1)
         }
     }
 }

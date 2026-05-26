@@ -12,12 +12,18 @@
 
 /* Begin PBXFileReference section */
 		E2690BC62FB70AF700015AE2 /* Code Awake.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Code Awake.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F1A0000B2FCDF00100000001 /* Code Awake Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Code Awake Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		E2690BC82FB70AF700015AE2 /* Code Awake */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Code Awake";
+			sourceTree = "<group>";
+		};
+		F1A0000A2FCDF00100000001 /* Code Awake Tests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Code Awake Tests";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -38,6 +44,7 @@
 			isa = PBXGroup;
 			children = (
 				E2690BC82FB70AF700015AE2 /* Code Awake */,
+				F1A0000A2FCDF00100000001 /* Code Awake Tests */,
 				E2690BC72FB70AF700015AE2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -46,6 +53,7 @@
 			isa = PBXGroup;
 			children = (
 				E2690BC62FB70AF700015AE2 /* Code Awake.app */,
+				F1A0000B2FCDF00100000001 /* Code Awake Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -76,7 +84,38 @@
 			productReference = E2690BC62FB70AF700015AE2 /* Code Awake.app */;
 			productType = "com.apple.product-type.application";
 		};
+		F1A0000C2FCDF00100000001 /* Code Awake Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F1A000112FCDF00100000001 /* Build configuration list for PBXNativeTarget "Code Awake Tests" */;
+			buildPhases = (
+				F1A0000D2FCDF00100000001 /* Sources */,
+				F1A0000E2FCDF00100000001 /* Frameworks */,
+				F1A0000F2FCDF00100000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F1A000132FCDF00100000001 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F1A0000A2FCDF00100000001 /* Code Awake Tests */,
+			);
+			name = "Code Awake Tests";
+			productName = "Code Awake Tests";
+			productReference = F1A0000B2FCDF00100000001 /* Code Awake Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
+
+/* Begin PBXContainerItemProxy section */
+		F1A000122FCDF00100000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E2690BBE2FB70AF700015AE2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E2690BC52FB70AF700015AE2;
+			remoteInfo = "Code Awake";
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXProject section */
 		E2690BBE2FB70AF700015AE2 /* Project object */ = {
@@ -88,6 +127,10 @@
 				TargetAttributes = {
 					E2690BC52FB70AF700015AE2 = {
 						CreatedOnToolsVersion = 26.5;
+					};
+					F1A0000C2FCDF00100000001 = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = E2690BC52FB70AF700015AE2;
 					};
 				};
 			};
@@ -109,12 +152,20 @@
 			projectRoot = "";
 			targets = (
 				E2690BC52FB70AF700015AE2 /* Code Awake */,
+				F1A0000C2FCDF00100000001 /* Code Awake Tests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		E2690BC42FB70AF700015AE2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F1A0000F2FCDF00100000001 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -131,7 +182,32 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F1A0000D2FCDF00100000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F1A0000E2FCDF00100000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F1A000132FCDF00100000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E2690BC52FB70AF700015AE2 /* Code Awake */;
+			targetProxy = F1A000122FCDF00100000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		E2690BCF2FB70AF800015AE2 /* Debug */ = {
@@ -262,7 +338,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = 8KK8V96Q6B;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -285,7 +361,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.5;
-				MARKETING_VERSION = 1.0.7;
+				MARKETING_VERSION = 1.0.8;
 				PRODUCT_BUNDLE_IDENTIFIER = "artsvit.apps.Code-Awake";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -307,7 +383,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = 8KK8V96Q6B;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -330,7 +406,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.5;
-				MARKETING_VERSION = 1.0.7;
+				MARKETING_VERSION = 1.0.8;
 				PRODUCT_BUNDLE_IDENTIFIER = "artsvit.apps.Code-Awake";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -340,6 +416,52 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		F1A000142FCDF00100000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Code Awake Tests";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "artsvit.apps.Code-AwakeTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Code Awake.app/Contents/MacOS/Code Awake";
+			};
+			name = Debug;
+		};
+		F1A000152FCDF00100000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Code Awake Tests";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "artsvit.apps.Code-AwakeTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Code Awake.app/Contents/MacOS/Code Awake";
 			};
 			name = Release;
 		};
@@ -360,6 +482,15 @@
 			buildConfigurations = (
 				E2690BD22FB70AF800015AE2 /* Debug */,
 				E2690BD32FB70AF800015AE2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F1A000112FCDF00100000001 /* Build configuration list for PBXNativeTarget "Code Awake Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F1A000142FCDF00100000001 /* Debug */,
+				F1A000152FCDF00100000001 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
