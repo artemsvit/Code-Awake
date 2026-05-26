@@ -18,7 +18,7 @@ NOTARY_PROFILE="${CODE_AWAKE_NOTARY_PROFILE:?Set CODE_AWAKE_NOTARY_PROFILE to yo
 SPARKLE_ACCOUNT="${CODE_AWAKE_SPARKLE_ACCOUNT:-CodeAwake}"
 GITHUB_REPO="${GITHUB_REPO:-artemsvit/Code-Awake}"
 GITHUB_RELEASE_URL_PREFIX="https://github.com/$GITHUB_REPO/releases/latest/download/"
-LANDING_SITE_URL="https://codeawake.artsvit.com/index.html"
+LANDING_SITE_URL="https://codeawake.uk/index.html"
 
 VERSION="$(awk -F ' = ' '/MARKETING_VERSION = / {gsub(/;/, "", $2); print $2; exit}' "$ROOT/Code Awake.xcodeproj/project.pbxproj")"
 ENTITLEMENTS="$ROOT/Code Awake/CodeAwakeRelease.entitlements"
