@@ -310,10 +310,10 @@ button.menubar-icon {
 }
 
 .battery-status-button svg {
-  width: 48px;
-  height: 38px;
-  stroke-width: 2.55;
-  transform: scale(1.28);
+  width: 44px;
+  height: 44px;
+  stroke-width: 2.15;
+  transform: scale(1.12);
 }
 
 button.menubar-icon:focus-visible {
@@ -426,6 +426,10 @@ button.menubar-icon:focus-visible {
   color: rgba(255, 255, 255, 0.92);
   font-size: clamp(16px, 1.45vw, 21px);
   font-weight: 500;
+}
+
+.app-menu-row > .app-switch {
+  justify-self: end;
 }
 
 .app-menu-row:hover,
@@ -675,14 +679,30 @@ button.app-menu-action:focus-visible {
 }
 
 .app-menu-symbol svg {
-  width: 27px;
-  height: 24px;
+  width: 31px;
+  height: 28px;
   fill: currentColor;
 }
 
+.app-menu-symbol svg.menu-cup-symbol {
+  width: 29px;
+  height: 21px;
+}
+
+.app-menu-symbol svg.menu-lock-symbol {
+  width: 21px;
+  height: 28px;
+}
+
 .app-menu-symbol svg.timer-symbol {
-  width: 25px;
-  height: 25px;
+  width: 29px;
+  height: 29px;
+}
+
+.app-menu-symbol svg.menu-login-symbol,
+.app-menu-symbol svg.menu-quit-symbol {
+  width: 24px;
+  height: 24px;
 }
 
 .app-menu-symbol svg.line-icon {
@@ -694,9 +714,14 @@ button.app-menu-action:focus-visible {
 }
 
 .app-menu-symbol svg.update-symbol {
-  width: 26px;
-  height: 22px;
+  width: 30px;
+  height: 25px;
   fill: currentColor;
+}
+
+.app-menu-symbol svg.menu-coffee-symbol {
+  width: 28px;
+  height: 28px;
 }
 
 .app-update-action.is-spinning .update-symbol {
@@ -716,8 +741,8 @@ button.app-menu-action:focus-visible {
 }
 
 .app-menu-symbol img {
-  width: 25px;
-  height: 25px;
+  width: 29px;
+  height: 29px;
   display: block;
 }
 
@@ -846,15 +871,18 @@ button.app-menu-action:focus-visible {
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(10, 12, 18, 0.18));
   filter: blur(4px);
   opacity: 0.9;
-  transform: translate3d(-1.5%, -1%, 0) scale(1.04);
+  transform: translate3d(-1.5%, -1%, 0) scale(1.03);
   transition: transform 9000ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: saverAtmosphere 14s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
 }
 
 .screen-saver-overlay::after {
   z-index: 3;
   background:
     radial-gradient(circle at 50% 45%, transparent 0 14rem, rgba(10, 12, 16, 0.13) 36rem),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(7, 8, 12, 0.24));
+    linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(7, 8, 12, 0.24)),
+    radial-gradient(circle at 35% 12%, rgba(255, 255, 255, 0.22), transparent 42%);
+  opacity: 0.8;
 }
 
 .screen-saver-overlay.is-active::before {
@@ -868,6 +896,7 @@ button.app-menu-action:focus-visible {
   filter: saturate(0.98);
   transform: translate3d(-1.2%, -0.7%, 0) scale(1.035);
   transition: transform 11000ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: saverFieldMove 9s linear infinite alternate;
 }
 
 .screen-saver-overlay.is-active .screen-saver-field {
@@ -888,6 +917,7 @@ button.app-menu-action:focus-visible {
   top: 9vh;
   background: rgba(151, 210, 146, 0.62);
   clip-path: polygon(0 0, 78% 0, 100% 100%, 22% 100%);
+  animation: saverBandOne 12s ease-in-out infinite alternate;
 }
 
 .screen-saver-band-two {
@@ -897,6 +927,7 @@ button.app-menu-action:focus-visible {
   top: 36vh;
   background: rgba(22, 155, 204, 0.46);
   clip-path: polygon(18% 0, 100% 0, 76% 100%, 0 100%);
+  animation: saverBandTwo 11s ease-in-out infinite alternate;
 }
 
 .screen-saver-band-three {
@@ -906,42 +937,58 @@ button.app-menu-action:focus-visible {
   bottom: -12vh;
   background: rgba(128, 196, 158, 0.54);
   clip-path: polygon(0 0, 100% 30%, 88% 100%, 14% 82%);
+  animation: saverBandThree 14s ease-in-out infinite alternate;
 }
 
 .screen-saver-lock {
   position: relative;
   z-index: 4;
-  width: clamp(68px, 6vw, 92px);
-  height: clamp(68px, 6vw, 92px);
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 28px;
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.055)),
-    rgba(13, 17, 23, 0.18);
-  box-shadow:
-    0 24px 72px rgba(0, 0, 0, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
   opacity: 0;
-  transform: translateY(14px) scale(0.94);
-  backdrop-filter: blur(28px) saturate(1.18);
-  -webkit-backdrop-filter: blur(28px) saturate(1.18);
+  transform: none;
+  width: auto;
+  height: auto;
+  padding: 0;
   transition:
-    opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
 }
+
+
 
 .screen-saver-overlay.is-active .screen-saver-lock {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: none;
 }
 
 .screen-saver-lock svg {
   width: clamp(30px, 2.6vw, 40px);
   height: clamp(42px, 3.6vw, 54px);
   fill: currentColor;
+}
+
+.screen-saver-lock-wrap {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.screen-saver-unlock-text {
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .update-dialog-overlay {
@@ -1281,6 +1328,7 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 32px;
   margin: 80px 0 42px;
   margin-inline: auto;
@@ -1303,6 +1351,13 @@ h2 {
   color: var(--muted);
   font-size: 16px;
   line-height: 1.55;
+}
+
+.download-band .primary-button {
+  flex: 0 0 auto;
+  min-width: 220px;
+  padding-inline: 28px;
+  white-space: nowrap;
 }
 
 .site-footer {
@@ -1624,6 +1679,76 @@ h2 {
   }
 }
 
+@keyframes wallpaperShimmer {
+  0% {
+    transform: translate3d(-2%, -1%, 0);
+  }
+
+  100% {
+    transform: translate3d(2%, 1%, 0);
+  }
+}
+
+@keyframes wallpaperDrift {
+  0% {
+    transform: scale(1) translate3d(-1%, 0.8%, 0);
+  }
+
+  100% {
+    transform: scale(1.04) translate3d(1%, -0.7%, 0);
+  }
+}
+
+@keyframes saverAtmosphere {
+  0% {
+    transform: translate3d(-1.5%, -1%, 0) scale(1.04);
+  }
+
+  100% {
+    transform: translate3d(1.8%, 1.2%, 0) scale(1.07);
+  }
+}
+
+@keyframes saverFieldMove {
+  0% {
+    transform: translate3d(-1.1%, -0.8%, 0) scale(1.03);
+  }
+
+  100% {
+    transform: translate3d(1.4%, 0.9%, 0) scale(1.07);
+  }
+}
+
+@keyframes saverBandOne {
+  0% {
+    transform: skewX(0deg) translateX(-3%);
+  }
+
+  100% {
+    transform: skewX(2.2deg) translateX(4%);
+  }
+}
+
+@keyframes saverBandTwo {
+  0% {
+    transform: skewX(-1deg) translateX(2%);
+  }
+
+  100% {
+    transform: skewX(1.8deg) translateX(-2.5%);
+  }
+}
+
+@keyframes saverBandThree {
+  0% {
+    transform: skewX(1.1deg) translateX(2%);
+  }
+
+  100% {
+    transform: skewX(-2.2deg) translateX(-3.5%);
+  }
+}
+
 .reveal {
   opacity: 0;
   transform: translateY(18px);
@@ -1657,8 +1782,14 @@ h2 {
   }
 
   .screen-saver-overlay::before,
+  .screen-saver-overlay::after,
   .screen-saver-field,
-  .screen-saver-lock {
+  .screen-saver-lock,
+  .screen-saver-band,
+  .screen-saver-overlay::before,
+  .mac-scene,
+  .mac-scene::before,
+  .mac-scene::after {
     animation: none;
   }
 }
@@ -1881,6 +2012,17 @@ h2 {
   .features-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .download-band {
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .download-band .primary-button {
+    min-width: 0;
+    margin-left: 0;
+    align-self: flex-start;
+  }
 }
 
 @media (max-width: 720px) {
@@ -2068,6 +2210,28 @@ h2 {
   .app-menu-symbol svg {
     width: 24px;
     height: 22px;
+  }
+
+  .app-menu-symbol svg.menu-cup-symbol {
+    width: 23px;
+    height: 17px;
+  }
+
+  .app-menu-symbol svg.menu-lock-symbol {
+    width: 17px;
+    height: 22px;
+  }
+
+  .app-menu-symbol svg.menu-login-symbol,
+  .app-menu-symbol svg.menu-quit-symbol,
+  .app-menu-symbol svg.menu-coffee-symbol {
+    width: 20px;
+    height: 20px;
+  }
+
+  .app-menu-symbol svg.update-symbol {
+    width: 22px;
+    height: 20px;
   }
 
   .app-menu-symbol img {
@@ -2329,6 +2493,28 @@ h2 {
   .app-menu-symbol svg {
     width: 22px;
     height: 20px;
+  }
+
+  .app-menu-symbol svg.menu-cup-symbol {
+    width: 21px;
+    height: 16px;
+  }
+
+  .app-menu-symbol svg.menu-lock-symbol {
+    width: 16px;
+    height: 20px;
+  }
+
+  .app-menu-symbol svg.menu-login-symbol,
+  .app-menu-symbol svg.menu-quit-symbol,
+  .app-menu-symbol svg.menu-coffee-symbol {
+    width: 18px;
+    height: 18px;
+  }
+
+  .app-menu-symbol svg.update-symbol {
+    width: 20px;
+    height: 18px;
   }
 
   .app-menu-symbol img {
