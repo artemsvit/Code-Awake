@@ -3,10 +3,13 @@ const menuToggle = document.querySelector(".mac-menubar .menubar-icon.active");
 const macContent = document.querySelector(".mac-content");
 const keepAwakeInput = document.querySelector('.app-switch-input[aria-label="Keep Mac Awake"]');
 const lockSleepInput = document.querySelector('.app-switch-input[aria-label="Lock & Sleep"]');
-const timerButton = document.querySelector(".app-menu-setting");
-const timerOptions = document.querySelector(".app-timer-options");
+const dimButton = document.querySelector(".app-dim-setting");
+const dimOptions = document.querySelector(".app-dim-options");
+const dimOptionButtons = document.querySelectorAll(".app-dim-options button[data-dim-minutes]");
+const timerButton = document.querySelector(".app-auto-timer-setting");
+const timerOptions = document.querySelector(".app-auto-timer-options");
 const timerValue = document.querySelector(".app-menu-value");
-const timerOptionButtons = document.querySelectorAll(".app-timer-options button");
+const timerOptionButtons = document.querySelectorAll(".app-auto-timer-options button[data-minutes]");
 const updateButton = document.querySelector(".app-update-action");
 const quitButton = document.querySelector(".app-quit-action");
 const lockButton = document.querySelector(".app-lock-action");
@@ -18,6 +21,7 @@ const updateDialogButton = document.querySelector(".update-dialog-button");
 const currentVersionTexts = document.querySelectorAll("[data-current-version]");
 const downloadLink = document.querySelector("[data-download-link]") || document.querySelector('a[download][href*="Code-Awake-"]');
 let selectedTimerMinutes = 0;
+let selectedDimMinutes = 1;
 let remainingTimerSeconds = 0;
 let timerInterval;
 let menuBootTimeout;
@@ -28,8 +32,22 @@ if ("scrollRestoration" in history) {
   history.scrollRestoration = "manual";
 }
 
+const syncDimPreviewState = () => {
+  const isKeepAwakeOn = !!keepAwakeInput?.checked;
+  const isLockSleepOn = !!lockSleepInput?.checked;
+  const isDimActive = isKeepAwakeOn && !isLockSleepOn && selectedDimMinutes > 0;
+
+  dimButton?.classList.toggle("is-dim-active", isDimActive);
+
+  if (!isKeepAwakeOn && dimButton && dimOptions) {
+    dimButton.setAttribute("aria-expanded", "false");
+    dimOptions.hidden = true;
+  }
+};
+
 const syncAwakePreviewState = () => {
   macContent?.classList.toggle("is-awake-off", !keepAwakeInput?.checked);
+  syncDimPreviewState();
 };
 
 const setLowBatteryPreview = (isLowBattery) => {
@@ -141,13 +159,27 @@ const countdownLabel = (seconds) => {
   return `${minutes}:${twoDigitSeconds}`;
 };
 
-const closeTimerOptions = () => {
+const closeAutoTimerOptions = () => {
   if (!timerButton || !timerOptions) {
     return;
   }
 
   timerButton.setAttribute("aria-expanded", "false");
   timerOptions.hidden = true;
+};
+
+const closeDimOptions = () => {
+  if (!dimButton || !dimOptions) {
+    return;
+  }
+
+  dimButton.setAttribute("aria-expanded", "false");
+  dimOptions.hidden = true;
+};
+
+const closeTimerOptions = () => {
+  closeAutoTimerOptions();
+  closeDimOptions();
 };
 
 const currentReleaseVersion = () => {
@@ -232,11 +264,37 @@ const startTimer = () => {
 if (timerButton && timerOptions) {
   timerButton.addEventListener("click", (event) => {
     event.stopPropagation();
+    closeDimOptions();
     const isOpen = timerButton.getAttribute("aria-expanded") === "true";
     timerButton.setAttribute("aria-expanded", String(!isOpen));
     timerOptions.hidden = isOpen;
   });
 }
+
+if (dimButton && dimOptions) {
+  dimButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+
+    if (!keepAwakeInput?.checked) {
+      closeDimOptions();
+      return;
+    }
+
+    closeAutoTimerOptions();
+    const isOpen = dimButton.getAttribute("aria-expanded") === "true";
+    dimButton.setAttribute("aria-expanded", String(!isOpen));
+    dimOptions.hidden = isOpen;
+  });
+}
+
+dimOptionButtons.forEach((optionButton) => {
+  optionButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    selectedDimMinutes = Number(optionButton.dataset.dimMinutes || 1);
+    closeDimOptions();
+    syncDimPreviewState();
+  });
+});
 
 timerOptionButtons.forEach((optionButton) => {
   optionButton.addEventListener("click", (event) => {
@@ -271,6 +329,8 @@ lockSleepInput?.addEventListener("change", () => {
   if (!lockSleepInput.checked) {
     setScreenSaverActive(false);
   }
+
+  syncDimPreviewState();
 });
 
 updateButton?.addEventListener("click", () => {

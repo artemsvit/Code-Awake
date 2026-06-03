@@ -72,7 +72,7 @@
           </p>
 
         <div class="hero-actions">
-            <a class="primary-button" href="https://github.com/artemsvit/Code-Awake/releases/latest/download/Code-Awake-1.0.8.dmg" download>
+            <a class="primary-button" href="https://github.com/artemsvit/Code-Awake/releases/latest/download/Code-Awake-1.0.10.dmg" download>
               <span>Download for Mac</span>
               <svg viewBox="0 0 16 16" aria-hidden="true">
                 <path d="M8 2.5v7"></path>
@@ -160,7 +160,7 @@
           </div>
 
             <div class="app-menu-card" id="hero-app-menu" aria-label="Code Awake opened menu">
-              <div class="app-menu-row">
+              <div class="app-menu-row app-keep-awake-row">
                 <span class="app-menu-symbol app-menu-state-symbol" aria-hidden="true">
                   <svg class="cup-icon-filled menu-cup-symbol" viewBox="0 0 25.7324 18.9941">
                     <path d="M12.2949 14.3164L13.1738 14.3164C18.0566 14.3164 21.3477 11.0254 21.3477 5.91797L21.3477 3.93555C21.3477 1.61133 17.8711 0.0292969 12.7344 0.0292969C7.59766 0.0292969 4.12109 1.61133 4.12109 3.93555L4.12109 5.91797C4.12109 10.8496 7.40234 14.3164 12.2949 14.3164ZM12.7344 6.31836C8.65234 6.31836 5.64453 5.2832 5.64453 3.93555C5.64453 2.59766 8.65234 1.55273 12.7344 1.55273C16.8262 1.55273 19.834 2.59766 19.834 3.93555C19.834 5.2832 16.8262 6.31836 12.7344 6.31836ZM20.293 10L21.0645 10C23.2422 10 24.5508 8.85742 24.5508 6.96289C24.5508 5.07812 23.2324 3.92578 21.0645 3.92578L20.4395 3.92578L20.4395 5.43945L21.0645 5.43945C22.3047 5.43945 23.0273 6.00586 23.0273 6.96289C23.0273 7.91016 22.3047 8.48633 21.0645 8.48633L20.293 8.48633ZM12.6855 18.9941C20.1074 18.9941 25.3711 16.8848 25.3711 13.8184C25.3711 12.627 24.5605 11.582 23.1348 10.7422C22.5488 10.9863 21.9043 11.123 21.1719 11.1426C19.6191 13.8477 16.7773 15.459 13.1738 15.459L12.2949 15.459C8.28125 15.459 5.14648 13.3301 3.75 10C1.37695 10.918 0 12.2461 0 13.8184C0 16.8848 5.27344 18.9941 12.6855 18.9941Z"></path>
@@ -170,10 +170,24 @@
                   </svg>
                 </span>
                 <span>Keep Mac Awake</span>
+                <button class="app-dim-setting" type="button" aria-label="Display dim timer" aria-expanded="false" aria-controls="hero-dim-options">
+                  <svg class="timer-symbol menu-timer-symbol" viewBox="0 0 20.2832 19.9316" aria-hidden="true">
+                    <path d="M9.96094 19.9219C15.459 19.9219 19.9219 15.459 19.9219 9.96094C19.9219 4.46289 15.459 0 9.9707 0C9.45312 0 9.19922 0.3125 9.19922 0.820312L9.19922 3.92578C9.19922 4.3457 9.49219 4.6875 9.91211 4.6875C10.3418 4.6875 10.6348 4.3457 10.6348 3.92578L10.6348 1.69922C14.668 2.00195 18.2617 5.37109 18.2617 9.96094C18.2617 14.5508 14.5508 18.2617 9.96094 18.2617C5.37109 18.2617 1.66016 14.5508 1.66016 9.9707C1.66016 7.88086 2.42188 6.01562 3.65234 4.58008C3.94531 4.20898 3.94531 3.71094 3.62305 3.36914C3.30078 3.02734 2.75391 3.05664 2.40234 3.48633C0.908203 5.23438 0 7.49023 0 9.96094C0 15.459 4.46289 19.9219 9.96094 19.9219Z"></path>
+                    <path d="M9.96094 11.5332C10.8398 11.5332 11.543 10.8301 11.543 9.96094C11.543 9.42383 11.2793 8.96484 10.8691 8.67188L5.97656 5.21484C5.49805 4.87305 5 5.37109 5.33203 5.86914L8.58398 10.7324C8.89648 11.2109 9.38477 11.5332 9.96094 11.5332Z"></path>
+                  </svg>
+                </button>
                 <label class="app-switch">
                   <input class="app-switch-input" type="checkbox" aria-label="Keep Mac Awake" checked>
                   <span class="app-switch-track" aria-hidden="true"></span>
                 </label>
+                <div class="app-timer-options app-dim-options" id="hero-dim-options" hidden>
+                  <p class="app-options-heading">Dim display after</p>
+                  <button type="button" data-dim-minutes="0">Off</button>
+                  <button type="button" data-dim-minutes="1">1 min</button>
+                  <button type="button" data-dim-minutes="5">5 min</button>
+                  <button type="button" data-dim-minutes="15">15 min</button>
+                  <button type="button" data-dim-minutes="30">30 min</button>
+                </div>
               </div>
 
               <div class="app-menu-warning" role="note">
@@ -205,7 +219,7 @@
               </div>
 
               <div class="app-menu-timer">
-                <button class="app-menu-row app-menu-setting" type="button" aria-expanded="false" aria-controls="hero-timer-options">
+                <button class="app-menu-row app-menu-setting app-auto-timer-setting" type="button" aria-expanded="false" aria-controls="hero-auto-timer-options">
                   <span class="app-menu-symbol app-menu-symbol-muted" aria-hidden="true">
                     <svg class="timer-symbol menu-timer-symbol" viewBox="0 0 20.2832 19.9316">
                       <path d="M9.96094 19.9219C15.459 19.9219 19.9219 15.459 19.9219 9.96094C19.9219 4.46289 15.459 0 9.9707 0C9.45312 0 9.19922 0.3125 9.19922 0.820312L9.19922 3.92578C9.19922 4.3457 9.49219 4.6875 9.91211 4.6875C10.3418 4.6875 10.6348 4.3457 10.6348 3.92578L10.6348 1.69922C14.668 2.00195 18.2617 5.37109 18.2617 9.96094C18.2617 14.5508 14.5508 18.2617 9.96094 18.2617C5.37109 18.2617 1.66016 14.5508 1.66016 9.9707C1.66016 7.88086 2.42188 6.01562 3.65234 4.58008C3.94531 4.20898 3.94531 3.71094 3.62305 3.36914C3.30078 3.02734 2.75391 3.05664 2.40234 3.48633C0.908203 5.23438 0 7.49023 0 9.96094C0 15.459 4.46289 19.9219 9.96094 19.9219Z"></path>
@@ -220,7 +234,7 @@
                     </svg>
                   </span>
                 </button>
-                <div class="app-timer-options" id="hero-timer-options" hidden>
+                <div class="app-timer-options app-auto-timer-options" id="hero-auto-timer-options" hidden>
                   <button type="button" data-minutes="0">Infinity</button>
                   <button type="button" data-minutes="30">After 30 min</button>
                   <button type="button" data-minutes="60">After 1h</button>
@@ -256,10 +270,10 @@
                   </svg>
                 </span>
                 <span>Check for Updates</span>
-                <span class="app-menu-version">v<span data-current-version>1.0.8</span></span>
+                <span class="app-menu-version">v<span data-current-version>1.0.10</span></span>
               </button>
 
-              <a class="app-menu-row app-menu-action" href="https://www.paypal.com/donate/?hosted_button_id=FF9ZWWCQR6X2W" target="_blank" rel="noopener noreferrer" aria-label="Buy Me a Coffee on PayPal">
+              <a class="app-menu-row app-menu-action paypal-action" href="https://www.paypal.com/donate/?hosted_button_id=FF9ZWWCQR6X2W" target="_blank" rel="noopener noreferrer" aria-label="Donate with PayPal">
                 <span class="app-menu-symbol app-menu-symbol-muted" aria-hidden="true">
                   <svg class="cup-heat-symbol menu-coffee-symbol" viewBox="0 0 25.7324 24.9551">
                     <path d="M19.1211 16.8105C22.041 17.4941 23.8574 18.6074 23.8574 19.7793C23.8574 21.6836 18.9941 23.4414 12.6855 23.4414C6.37695 23.4414 1.51367 21.6836 1.51367 19.7793C1.51367 18.6172 3.28125 17.5234 6.14258 16.8203L5.40039 15.4336C2.03125 16.3223 0 17.875 0 19.7793C0 22.8457 5.27344 24.9551 12.6855 24.9551C20.1074 24.9551 25.3711 22.8457 25.3711 19.7793C25.3711 17.8262 23.2227 16.2344 19.7168 15.3652ZM20 10.0332L20 12.0742C20 16.293 17.3047 19.1641 13.1348 19.1641L12.2266 19.1641C8.04688 19.1641 5.37109 16.3125 5.37109 12.0742L5.37109 10.0332L3.79883 10.0332L3.79883 12.0742C3.79883 17.1621 7.1875 20.7363 12.2266 20.7363L13.1348 20.7363C18.1738 20.7363 21.5723 17.1523 21.5723 12.0742L21.5723 10.0332ZM12.6855 14.0566C17.9785 14.0566 21.5723 12.4258 21.5723 10.0332C21.5723 7.63086 17.9883 6 12.6855 6C7.38281 6 3.79883 7.63086 3.79883 10.0332C3.79883 12.4258 7.39258 14.0566 12.6855 14.0566ZM12.6855 12.4844C8.47656 12.4844 5.37109 11.4199 5.37109 10.0332C5.37109 8.64648 8.47656 7.57227 12.6855 7.57227C16.8945 7.57227 20 8.64648 20 10.0332C20 11.4199 16.8945 12.4844 12.6855 12.4844ZM20.4785 16.293L21.2793 16.293C23.5254 16.293 24.873 15.1113 24.873 13.1484C24.873 11.2051 23.5156 10.0137 21.2793 10.0137L20.625 10.0137L20.625 11.5859L21.2793 11.5859C22.5488 11.5859 23.3008 12.1719 23.3008 13.1484C23.3008 14.125 22.5488 14.7207 21.2793 14.7207L20.4785 14.7207Z"></path>
@@ -268,7 +282,8 @@
                     <path d="M17.95 4.15C17.25 3.45 17.25 2.55 17.95 1.85C18.4 1.4 18.15 0.75 17.56 0.75C17.28 0.75 17.06 0.86 16.82 1.1C15.54 2.38 15.54 3.96 16.82 5.24C17.06 5.48 17.28 5.59 17.56 5.59C18.15 5.59 18.4 4.94 17.95 4.49Z"></path>
                   </svg>
                 </span>
-                <span>Buy Me a Coffee</span>
+                <span class="paypal-label paypal-label-default">Buy Me a Coffee</span>
+                <span class="paypal-label paypal-label-hover" aria-hidden="true">Donate with PayPal</span>
               </a>
 
               <button class="app-menu-row app-menu-action app-quit-action" type="button" aria-label="Quit Code Awake">
@@ -436,7 +451,7 @@
         <h2 id="download-title">Keep focus on the work, not the power settings.</h2>
         <p>Designed as a small, native-feeling utility for everyday Mac workflows.</p>
       </div>
-      <a class="primary-button" href="https://github.com/artemsvit/Code-Awake/releases/latest/download/Code-Awake-1.0.8.dmg" download data-download-link>
+      <a class="primary-button" href="https://github.com/artemsvit/Code-Awake/releases/latest/download/Code-Awake-1.0.10.dmg" download data-download-link>
         <span>Get Code Awake</span>
         <svg viewBox="0 0 16 16" aria-hidden="true">
           <path d="M8 2.5v7"></path>
@@ -477,7 +492,7 @@
       aria-describedby="update-dialog-copy" tabindex="-1">
       <img class="update-dialog-icon" src="assets/app-icon.png" alt="">
       <h2 id="update-dialog-title">You’re up to date!</h2>
-      <p id="update-dialog-copy">Code Awake <span data-current-version>1.0.8</span> is currently the newest version available.</p>
+      <p id="update-dialog-copy">Code Awake <span data-current-version>1.0.10</span> is currently the newest version available.</p>
       <button class="update-dialog-button" type="button">OK</button>
     </div>
   </div>

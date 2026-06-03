@@ -42,7 +42,10 @@ struct Code_AwakeApp: App {
                 updateAction: checkForUpdatesManually,
                 lockScreenAction: lockScreenNow,
                 donateAction: openDonatePage,
-                quitAction: { NSApp.terminate(nil) }
+                quitAction: {
+                    awakeController.shutdown()
+                    NSApp.terminate(nil)
+                }
             )
         } label: {
             Image(nsImage: Self.makeStatusBarIcon(
@@ -132,6 +135,13 @@ private struct CodeAwakeMenuPanel: View {
                 isEnabled: awakeController.keepAwakeEnabled,
                 title: "Keep Mac Awake",
                 icon: awakeController.keepAwakeEnabled ? "cup.and.saucer.fill" : "cup.and.saucer",
+                selectedDimDelayMinutes: awakeController.displayDimDelayMinutes,
+                dimDelayOptions: AwakeController.displayDimDelayOptions,
+                isDimDelayActive: awakeController.displayDimDelayMinutes > 0,
+                isDimDelayAvailable: awakeController.keepAwakeEnabled,
+                dimDelayAction: { selectedMinutes in
+                    awakeController.setDisplayDimDelayMinutes(selectedMinutes)
+                },
                 action: { awakeController.setKeepAwakeEnabled(!awakeController.keepAwakeEnabled) }
             )
 
@@ -181,11 +191,16 @@ private struct CodeAwakeMenuPanel: View {
                 trailingText: appVersionLabel,
                 action: checkForUpdates
             )
-            MenuActionRow(title: "Buy Me a Coffee", icon: "cup.and.heat.waves", action: donateAction)
+            MenuActionRow(
+                title: "Buy Me a Coffee",
+                hoverTitle: "Donate with PayPal",
+                icon: "cup.and.heat.waves",
+                action: donateAction
+            )
             MenuActionRow(title: "Quit Code Awake", icon: "power", action: quitAction)
         }
         .padding(9)
-        .frame(width: 268)
+        .frame(width: 286)
         .background(
             LinearGradient(
                 colors: [
@@ -222,32 +237,54 @@ private struct MenuToggleRow: View {
     let title: String
     let icon: String
     var iconScale = 1.0
+    var selectedDimDelayMinutes: Int?
+    var dimDelayOptions: [Int] = []
+    var isDimDelayActive = false
+    var isDimDelayAvailable = true
+    var dimDelayAction: ((Int) -> Void)?
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 9) {
-                Image(systemName: icon)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(iconColor)
-                    .scaleEffect(iconScale)
-                    .frame(width: 24)
+        HStack(spacing: 9) {
+            Button(action: action) {
+                HStack(spacing: 9) {
+                    Image(systemName: icon)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(iconColor)
+                        .scaleEffect(iconScale)
+                        .frame(width: 24)
 
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
+                    Text(title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
 
-                Spacer(minLength: 12)
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
 
+            if isDimDelayAvailable, let selectedDimDelayMinutes, let dimDelayAction {
+                MenuDimDelayButton(
+                    selectedMinutes: selectedDimDelayMinutes,
+                    options: dimDelayOptions,
+                    isActive: isDimDelayActive,
+                    isAvailable: isDimDelayAvailable,
+                    action: dimDelayAction
+                )
+            }
+
+            Button(action: action) {
                 AwakeSwitch(isEnabled: isEnabled)
             }
-            .padding(.horizontal, 9)
-            .frame(height: 36)
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 9)
+        .frame(height: 36)
+        .contentShape(Rectangle())
     }
 
     private var iconColor: Color {
@@ -310,13 +347,66 @@ private struct MenuLockSleepRow: View {
     }
 }
 
-private struct AwakeSwitch: View {
-    let isEnabled: Bool
+private struct MenuDimDelayButton: View {
+    let selectedMinutes: Int
+    let options: [Int]
+    let isActive: Bool
+    let isAvailable: Bool
+    let action: (Int) -> Void
 
     var body: some View {
-        ZStack(alignment: isEnabled ? .trailing : .leading) {
-            Group {
-                if isEnabled {
+        Menu {
+            Text("Built-in display dim timer")
+
+            Divider()
+
+            ForEach(options, id: \.self) { minutes in
+                Button(action: { action(minutes) }) {
+                    HStack {
+                        Text(DisplayDimDelayFormatter.optionLabel(for: minutes))
+
+                        if minutes == selectedMinutes {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "timer")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(iconColor)
+                .frame(width: 24, height: 24)
+                .background(.white.opacity(0.12))
+                .clipShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .menuStyle(.button)
+        .disabled(!isAvailable)
+        .opacity(isAvailable ? 1 : 0.42)
+    }
+
+    private var iconColor: Color {
+        isActive ? Color(red: 1.0, green: 0.62, blue: 0.52) : .white.opacity(0.72)
+    }
+}
+
+private struct AwakeSwitch: View {
+    let isEnabled: Bool
+    @State private var isHovered = false
+
+    private let switchAnimation = Animation.spring(
+        response: 0.28,
+        dampingFraction: 0.78,
+        blendDuration: 0.08
+    )
+
+    var body: some View {
+        ZStack {
+            Capsule()
+                .fill(Color.secondary.opacity(0.18))
+
+            Capsule()
+                .fill(
                     LinearGradient(
                         colors: [
                             Color(red: 0.84, green: 0.49, blue: 0.92),
@@ -325,28 +415,43 @@ private struct AwakeSwitch: View {
                         startPoint: .leading,
                         endPoint: .trailing
                     )
-                } else {
-                    Color.secondary.opacity(0.18)
+                )
+                .opacity(isEnabled ? 1 : 0)
+
+            HStack {
+                if isEnabled {
+                    Spacer(minLength: 0)
+                }
+
+                Circle()
+                    .fill(.white)
+                    .frame(width: 14, height: 14)
+                    .scaleEffect(isHovered ? 1.06 : 1)
+                    .shadow(color: .black.opacity(isEnabled ? 0.22 : 0.16), radius: isEnabled ? 3 : 2, x: 0, y: 1)
+
+                if !isEnabled {
+                    Spacer(minLength: 0)
                 }
             }
-            .clipShape(Capsule())
-
-            Circle()
-                .fill(.white)
-                .frame(width: 14, height: 14)
-                .padding(3)
-                .shadow(color: .black.opacity(0.16), radius: 2, x: 0, y: 1)
+            .padding(3)
         }
         .frame(width: 36, height: 20)
+        .scaleEffect(isHovered ? 1.015 : 1)
+        .contentShape(Capsule())
+        .animation(switchAnimation, value: isEnabled)
+        .animation(.easeOut(duration: 0.14), value: isHovered)
+        .onHover { isHovered = $0 }
     }
 }
 
 private struct MenuActionRow: View {
     let title: String
+    var hoverTitle: String?
     let icon: String
     var iconRotation = 0.0
     var trailingText = ""
     let action: () -> Void
+    @State private var isHovered = false
 
     var body: some View {
         Button(action: action) {
@@ -357,9 +462,10 @@ private struct MenuActionRow: View {
                     .rotationEffect(.degrees(iconRotation))
                     .frame(width: 24)
 
-                Text(title)
+                Text(isHovered ? hoverTitle ?? title : title)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.92))
+                    .animation(.easeOut(duration: 0.12), value: isHovered)
 
                 Spacer()
 
@@ -376,6 +482,7 @@ private struct MenuActionRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
     }
 }
 
@@ -396,7 +503,13 @@ private struct MenuTimerRow: View {
         Menu {
             ForEach(options, id: \.self) { minutes in
                 Button(action: { action(minutes) }) {
-                    Text(self.optionLabel(for: minutes))
+                    HStack {
+                        Text(self.optionLabel(for: minutes))
+
+                        if minutes == selectedMinutes {
+                            Image(systemName: "checkmark")
+                        }
+                    }
                 }
             }
         } label: {

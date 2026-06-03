@@ -7,11 +7,48 @@
 
 import Foundation
 
+struct AwakePowerAssertion: Equatable {
+    let type: String
+    let reason: String
+}
+
+struct AwakeAssertionPolicy {
+    private let systemAssertions = [
+        AwakePowerAssertion(
+            type: "PreventUserIdleSystemSleep",
+            reason: "Code Awake - Prevent idle system sleep"
+        ),
+        AwakePowerAssertion(
+            type: "NetworkClientActive",
+            reason: "Code Awake - Keep network clients active"
+        )
+    ]
+
+    private let displayAssertions = [
+        AwakePowerAssertion(
+            type: "PreventUserIdleDisplaySleep",
+            reason: "Code Awake - Prevent display sleep and lock timing"
+        )
+    ]
+
+    func activeAssertions(allowLockAndSleepEnabled: Bool) -> [AwakePowerAssertion] {
+        allowLockAndSleepEnabled ? systemAssertions : systemAssertions + displayAssertions
+    }
+}
+
 struct BatteryProtectionPolicy {
     let lowBatteryThreshold: Int
 
     func shouldPauseAwakeMode(percent: Int, isOnBatteryPower: Bool) -> Bool {
         isOnBatteryPower && percent <= lowBatteryThreshold
+    }
+
+    func shouldMonitorBattery(keepAwakeEnabled: Bool, errorMessage: String?) -> Bool {
+        keepAwakeEnabled || errorMessage == pauseMessage
+    }
+
+    func shouldClearPauseMessage(percent: Int, isOnBatteryPower: Bool, currentMessage: String?) -> Bool {
+        currentMessage == pauseMessage && !shouldPauseAwakeMode(percent: percent, isOnBatteryPower: isOnBatteryPower)
     }
 
     var pauseMessage: String {
@@ -25,7 +62,7 @@ struct DisplayDimPolicy {
     let minimumRescheduleDelay: TimeInterval
 
     func shouldManageDimming(keepAwakeEnabled: Bool, allowLockAndSleepEnabled: Bool) -> Bool {
-        keepAwakeEnabled && !allowLockAndSleepEnabled
+        keepAwakeEnabled && !allowLockAndSleepEnabled && dimDelay > 0
     }
 
     func delayUntilDim(currentIdleTime: TimeInterval?) -> TimeInterval {
@@ -46,6 +83,14 @@ struct DisplayDimPolicy {
 
     func shouldRestoreBrightness(hasStoredBrightness: Bool, currentIdleTime: TimeInterval?) -> Bool {
         guard hasStoredBrightness, let currentIdleTime else {
+            return false
+        }
+
+        return currentIdleTime <= activityRestoreIdleThreshold
+    }
+
+    func shouldRestoreDimming(isDimmed: Bool, currentIdleTime: TimeInterval?) -> Bool {
+        guard isDimmed, let currentIdleTime else {
             return false
         }
 
@@ -96,6 +141,20 @@ enum AutoTurnOffFormatter {
         }
 
         return "\(hours)h \(remainingMinutes)m"
+    }
+}
+
+enum DisplayDimDelayFormatter {
+    static func optionLabel(for minutes: Int) -> String {
+        guard minutes > 0 else {
+            return "Off"
+        }
+
+        return "Dim display after \(durationLabel(for: minutes))"
+    }
+
+    private static func durationLabel(for minutes: Int) -> String {
+        minutes == 1 ? "1 min" : "\(minutes) min"
     }
 }
 

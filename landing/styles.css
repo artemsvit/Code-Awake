@@ -432,6 +432,11 @@ button.menubar-icon:focus-visible {
   justify-self: end;
 }
 
+.app-keep-awake-row {
+  position: relative;
+  grid-template-columns: 40px minmax(0, 1fr) auto 56px;
+}
+
 .app-menu-row:hover,
 .app-menu-row:has(.app-switch-input:focus-visible),
 .app-menu-row:has(.app-switch:hover) {
@@ -448,6 +453,33 @@ button.menubar-icon:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.paypal-label {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.paypal-label-hover {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.paypal-action:hover .paypal-label-default,
+.paypal-action:focus-visible .paypal-label-default {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.paypal-action:hover .paypal-label-hover,
+.paypal-action:focus-visible .paypal-label-hover {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .app-menu-version {
@@ -499,7 +531,9 @@ button.menubar-icon:focus-visible {
 .app-lock-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-self: end;
+  gap: 16px;
+  margin-right: 0;
 }
 
 .app-lock-circle {
@@ -528,6 +562,49 @@ button.menubar-icon:focus-visible {
 }
 
 .app-lock-sleep-row:not(:has(.app-switch-input:checked)) .app-lock-circle {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.7);
+}
+
+.app-dim-setting {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transform: scale(1);
+  transition:
+    background 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-dim-setting svg {
+  width: 19px;
+  height: 19px;
+  fill: currentColor;
+}
+
+.app-dim-setting:hover,
+.app-dim-setting:focus-visible,
+.app-dim-setting[aria-expanded="true"] {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  outline: none;
+}
+
+.app-dim-setting.is-dim-active {
+  background: rgba(255, 154, 132, 0.17);
+  color: var(--coral);
+}
+
+.mac-content.is-awake-off .app-dim-setting {
   opacity: 0;
   pointer-events: none;
   transform: scale(0.7);
@@ -646,7 +723,25 @@ button.app-menu-action:focus-visible {
   line-height: 1.2;
 }
 
-.app-timer-options[hidden] {
+.app-dim-options {
+  top: calc(100% + 8px);
+  left: auto;
+  right: 0;
+  width: min(290px, 100%);
+  overflow: hidden;
+}
+
+.app-options-heading {
+  margin: 2px 0 4px;
+  padding: 0 24px;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 0.76em;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.app-timer-options[hidden],
+.app-dim-options[hidden] {
   display: none;
 }
 
@@ -695,8 +790,8 @@ button.app-menu-action:focus-visible {
 }
 
 .app-menu-symbol svg.timer-symbol {
-  width: 29px;
-  height: 29px;
+  width: 25px;
+  height: 25px;
 }
 
 .app-menu-symbol svg.menu-login-symbol,
@@ -793,7 +888,10 @@ button.app-menu-action:focus-visible {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.14);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.34);
-  transition: background 160ms ease;
+  transition:
+    background 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .app-switch-track::after {
@@ -806,7 +904,18 @@ button.app-menu-action:focus-visible {
   border-radius: 999px;
   background: #fff;
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.22);
-  transition: transform 160ms ease;
+  transition:
+    transform 360ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-switch:hover .app-switch-track {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.34);
+}
+
+.app-switch:active .app-switch-track {
+  transform: translateY(0) scale(0.98);
 }
 
 .app-switch-input:focus-visible + .app-switch-track {
@@ -2153,6 +2262,10 @@ h2 {
     font-size: 15px;
   }
 
+  .app-keep-awake-row {
+    grid-template-columns: 34px minmax(0, 1fr) auto 52px;
+  }
+
   .app-menu-action {
     grid-template-columns: 34px minmax(0, 1fr) auto;
     min-height: 56px;
@@ -2163,12 +2276,22 @@ h2 {
   }
 
   .app-lock-controls {
-    gap: 8px;
+    gap: 12px;
   }
 
   .app-lock-circle {
     width: 28px;
     height: 28px;
+  }
+
+  .app-dim-setting {
+    width: 28px;
+    height: 28px;
+  }
+
+  .app-dim-setting svg {
+    width: 17px;
+    height: 17px;
   }
 
   .app-menu-warning {
@@ -2198,6 +2321,10 @@ h2 {
     font-size: 15px;
   }
 
+  .app-dim-options {
+    width: min(265px, 100%);
+  }
+
   .app-timer-options button {
     min-height: 36px;
     padding-inline: 24px;
@@ -2219,6 +2346,11 @@ h2 {
 
   .app-menu-symbol svg.menu-lock-symbol {
     width: 17px;
+    height: 22px;
+  }
+
+  .app-menu-symbol svg.timer-symbol {
+    width: 22px;
     height: 22px;
   }
 
@@ -2431,6 +2563,10 @@ h2 {
     font-size: 14px;
   }
 
+  .app-keep-awake-row {
+    grid-template-columns: 30px minmax(0, 1fr) auto 44px;
+  }
+
   .app-menu-action {
     grid-template-columns: 30px minmax(0, 1fr) auto;
     min-height: 50px;
@@ -2441,12 +2577,22 @@ h2 {
   }
 
   .app-lock-controls {
-    gap: 6px;
+    gap: 10px;
   }
 
   .app-lock-circle {
     width: 25px;
     height: 25px;
+  }
+
+  .app-dim-setting {
+    width: 25px;
+    height: 25px;
+  }
+
+  .app-dim-setting svg {
+    width: 15px;
+    height: 15px;
   }
 
   .app-lock-circle svg {
@@ -2485,6 +2631,10 @@ h2 {
     font-size: 14px;
   }
 
+  .app-dim-options {
+    width: min(235px, 100%);
+  }
+
   .app-timer-options button {
     min-height: 34px;
     padding-inline: 18px;
@@ -2502,6 +2652,11 @@ h2 {
 
   .app-menu-symbol svg.menu-lock-symbol {
     width: 16px;
+    height: 20px;
+  }
+
+  .app-menu-symbol svg.timer-symbol {
+    width: 20px;
     height: 20px;
   }
 
