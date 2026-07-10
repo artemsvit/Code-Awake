@@ -1,0 +1,6 @@
+name = "codeawake"
+account_id = "4620a181af4f2b7e4b744463b6ab9cb4"
+compatibility_date = "2026-06-02"
+
+[assets]
+directory = "./landing"
