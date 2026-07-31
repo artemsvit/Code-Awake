@@ -199,7 +199,11 @@ then
 fi
 
 sync
-hdiutil detach "$mount_point"
+if ! hdiutil detach "$mount_point"; then
+  echo "DMG volume is still busy; retrying with a forced detach." >&2
+  sleep 2
+  hdiutil detach "$mount_point" -force
+fi
 
 echo "==> Compressing and signing DMG"
 hdiutil convert "$RW_DMG" -format UDZO -imagekey zlib-level=9 -o "$FINAL_DMG"
