@@ -2,7 +2,7 @@ const revealItems = document.querySelectorAll(".reveal");
 const menuToggle = document.querySelector(".mac-menubar .menubar-icon.active");
 const macContent = document.querySelector(".mac-content");
 const keepAwakeInput = document.querySelector('.app-switch-input[aria-label="Keep Mac Awake"]');
-const lockSleepInput = document.querySelector('.app-switch-input[aria-label="Lock & Sleep"]');
+const lockSleepInput = document.querySelector('.app-switch-input[aria-label="Allow Lock & Sleep"]');
 const dimButton = document.querySelector(".app-dim-setting");
 const dimOptions = document.querySelector(".app-dim-options");
 const dimOptionButtons = document.querySelectorAll(".app-dim-options button[data-dim-minutes]");
@@ -182,6 +182,20 @@ const closeTimerOptions = () => {
   closeDimOptions();
 };
 
+const syncSelectedOptions = (buttons, attribute, selectedValue) => {
+  buttons.forEach((button) => {
+    button.classList.toggle("is-selected", Number(button.dataset[attribute]) === selectedValue);
+  });
+};
+
+const syncDimOptionSelection = () => {
+  syncSelectedOptions(dimOptionButtons, "dimMinutes", selectedDimMinutes);
+};
+
+const syncTimerOptionSelection = () => {
+  syncSelectedOptions(timerOptionButtons, "minutes", selectedTimerMinutes);
+};
+
 const currentReleaseVersion = () => {
   const href = downloadLink?.getAttribute("href") || "";
   const match = href.match(/Code-Awake-([0-9]+(?:\.[0-9]+)+)\.dmg/i);
@@ -292,6 +306,7 @@ dimOptionButtons.forEach((optionButton) => {
     event.stopPropagation();
     selectedDimMinutes = Number(optionButton.dataset.dimMinutes || 1);
     closeDimOptions();
+    syncDimOptionSelection();
     syncDimPreviewState();
   });
 });
@@ -301,6 +316,7 @@ timerOptionButtons.forEach((optionButton) => {
     event.stopPropagation();
     selectedTimerMinutes = Number(optionButton.dataset.minutes || 0);
     closeTimerOptions();
+    syncTimerOptionSelection();
     startTimer();
     updateTimerLabel();
   });
@@ -394,3 +410,6 @@ screenSaverOverlay?.addEventListener("keydown", (event) => {
 });
 
 document.addEventListener("click", closeTimerOptions);
+
+syncDimOptionSelection();
+syncTimerOptionSelection();
