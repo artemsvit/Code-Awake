@@ -248,7 +248,7 @@ h1 {
   right: clamp(18px, 2.8vw, 46px);
   left: auto;
   z-index: 4;
-  width: min(478px, 60%);
+  width: min(510px, 64%);
   user-select: none;
   -webkit-user-select: none;
 }
@@ -430,6 +430,10 @@ button.menubar-icon:focus-visible {
 
 .app-menu-row > .app-switch {
   justify-self: end;
+}
+
+.app-menu-row > span:nth-child(2) {
+  white-space: nowrap;
 }
 
 .app-keep-awake-row {
@@ -870,6 +874,8 @@ button.app-menu-action:focus-visible {
   width: 25px;
   height: 22px;
   display: block;
+  transform: scale(1.16);
+  transform-origin: center;
 }
 
 .closed-lid-laptop-base,
@@ -1996,7 +2002,7 @@ h2 {
 
   .mac-content {
     right: clamp(14px, 2.4vw, 34px);
-    width: min(415px, 56%);
+    width: min(447px, 60%);
   }
 
   .mac-menubar {
@@ -2058,7 +2064,7 @@ h2 {
 
   .mac-content {
     right: clamp(12px, 2vw, 24px);
-    width: min(390px, 56%);
+    width: min(422px, 60%);
   }
 
   .mac-menubar {
@@ -2116,7 +2122,7 @@ h2 {
   .mac-content {
     top: 0;
     right: clamp(16px, 2.8vw, 34px);
-    width: min(440px, 54%);
+    width: min(472px, 58%);
   }
 
   .mac-menubar {
