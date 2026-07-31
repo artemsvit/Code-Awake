@@ -32,7 +32,14 @@ GITHUB_RELEASE_DIR="$DIST/github-release"
 GITHUB_DMG_NAME="Code-Awake-$VERSION.dmg"
 GITHUB_RELEASE_DMG="$GITHUB_RELEASE_DIR/$GITHUB_DMG_NAME"
 
-export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
+if [[ -d "/Applications/Xcode-beta.app/Contents/Developer" ]]; then
+  export DEVELOPER_DIR="/Applications/Xcode-beta.app/Contents/Developer"
+elif [[ -d "/Applications/Xcode.app/Contents/Developer" ]]; then
+  export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
+else
+  echo "A full Xcode installation is required to build the release." >&2
+  exit 1
+fi
 
 current_build="$(awk -F ' = ' '/CURRENT_PROJECT_VERSION = / {gsub(/;/, "", $2); print $2; exit}' "$ROOT/Code Awake.xcodeproj/project.pbxproj")"
 if [[ "${CODE_AWAKE_SKIP_BUILD_BUMP:-0}" == "1" ]]; then
