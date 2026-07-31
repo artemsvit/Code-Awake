@@ -60,6 +60,20 @@ final class AppLogicTests: XCTestCase {
         XCTAssertFalse(assertionTypes.contains("NoDisplaySleepAssertion"))
     }
 
+    func testAwakeAssertionPolicyRequestsBestEffortClosedLidAssertionWhenEnabled() {
+        let policy = AwakeAssertionPolicy()
+
+        let assertions = policy.activeAssertions(
+            allowLockAndSleepEnabled: true,
+            allowClosedLidEnabled: true
+        )
+
+        XCTAssertTrue(assertions.contains(AwakePowerAssertion(
+            type: "PreventSystemSleep",
+            reason: "Code Awake - Best-effort closed lid mode"
+        )))
+    }
+
     func testBatteryProtectionPausesOnlyLowBatteryPower() {
         let policy = BatteryProtectionPolicy(lowBatteryThreshold: 10)
 
@@ -151,6 +165,23 @@ final class AppLogicTests: XCTestCase {
         XCTAssertEqual(AutoTurnOffFormatter.countdownLabel(for: 65), "1:05")
         XCTAssertEqual(AutoTurnOffFormatter.countdownLabel(for: 3661), "1:01:01")
         XCTAssertEqual(AutoTurnOffFormatter.countdownLabel(for: -5), "0:00")
+    }
+
+    func testAutoOffDeadlinePolicySchedulesFiveMinuteWarningAndExtension() {
+        let policy = AutoOffDeadlinePolicy()
+        let start = Date(timeIntervalSince1970: 1_000)
+        let endDate = try! XCTUnwrap(policy.endDate(startingAt: start, minutes: 30))
+
+        XCTAssertEqual(policy.remainingSeconds(until: endDate, now: start), 1_800)
+        XCTAssertEqual(policy.warningDelay(until: endDate, now: start), 1_500)
+        XCTAssertNil(policy.warningDelay(until: endDate, now: endDate.addingTimeInterval(-300)))
+
+        let extendedEndDate = policy.extending(
+            endDate: endDate,
+            by: 30 * 60,
+            now: endDate.addingTimeInterval(-300)
+        )
+        XCTAssertEqual(extendedEndDate, endDate.addingTimeInterval(30 * 60))
     }
 
     func testDisplayDimDelayLabels() {

@@ -142,6 +142,7 @@ private struct CodeAwakeMenuPanel: View {
                 dimDelayAction: { selectedMinutes in
                     awakeController.setDisplayDimDelayMinutes(selectedMinutes)
                 },
+                tooltip: "Keep your Mac awake while this switch is on.",
                 action: { awakeController.setKeepAwakeEnabled(!awakeController.keepAwakeEnabled) }
             )
 
@@ -154,7 +155,19 @@ private struct CodeAwakeMenuPanel: View {
                 toggleAction: {
                     awakeController.setAllowLockAndSleepEnabled(!awakeController.allowLockAndSleepEnabled)
                 },
+                tooltip: "Allow macOS to lock the screen or sleep while Code Awake is active.",
                 lockAction: lockScreenAction
+            )
+
+            MenuToggleRow(
+                isEnabled: awakeController.allowClosedLidEnabled,
+                title: "Allow Closed Lid",
+                icon: "laptopcomputer",
+                usesClosedLidIcon: true,
+                tooltip: "Best effort: request that macOS keeps your Mac awake with the lid closed. An external display, power, and input device may still be required.",
+                action: {
+                    awakeController.setAllowClosedLidEnabled(!awakeController.allowClosedLidEnabled)
+                }
             )
 
             MenuTimerRow(
@@ -164,6 +177,7 @@ private struct CodeAwakeMenuPanel: View {
                 selectedMinutes: awakeController.keepAwakeOffTimerMinutes,
                 remainingSeconds: awakeController.keepAwakeRemainingSeconds,
                 options: AwakeController.offTimerOptions,
+                tooltip: "Choose when Code Awake should automatically turn off.",
                 action: { selectedMinutes in
                     awakeController.setKeepAwakeOffTimerMinutes(selectedMinutes)
                 }
@@ -177,6 +191,7 @@ private struct CodeAwakeMenuPanel: View {
                 title: "Launch at Login",
                 icon: "arrow.up.forward.app",
                 iconScale: 1.16,
+                tooltip: "Start Code Awake automatically when you sign in.",
                 action: { launchAtLoginController.setEnabled(!launchAtLoginController.isEnabled) }
             )
 
@@ -189,18 +204,26 @@ private struct CodeAwakeMenuPanel: View {
                 icon: "arrow.triangle.2.circlepath",
                 iconRotation: updateIconRotation,
                 trailingText: appVersionLabel,
+                tooltip: "Check now for a newer version of Code Awake.",
                 action: checkForUpdates
             )
             MenuActionRow(
                 title: "Buy Me a Coffee",
                 hoverTitle: "Donate with PayPal",
                 icon: "cup.and.heat.waves",
+                tooltip: "Help keep Code Awake free and thoughtfully maintained.",
                 action: donateAction
             )
-            MenuActionRow(title: "Quit Code Awake", icon: "power", action: quitAction)
+            MenuActionRow(
+                title: "Quit Code Awake",
+                icon: "power",
+                trailingText: "⌘Q",
+                tooltip: "Quit Code Awake and stop keeping your Mac awake.",
+                action: quitAction
+            )
         }
         .padding(9)
-        .frame(width: 286)
+        .frame(width: 302)
         .background(
             LinearGradient(
                 colors: [
@@ -237,22 +260,30 @@ private struct MenuToggleRow: View {
     let title: String
     let icon: String
     var iconScale = 1.0
+    var usesClosedLidIcon = false
     var selectedDimDelayMinutes: Int?
     var dimDelayOptions: [Int] = []
     var isDimDelayActive = false
     var isDimDelayAvailable = true
     var dimDelayAction: ((Int) -> Void)?
+    var tooltip: String
     let action: () -> Void
 
     var body: some View {
         HStack(spacing: 9) {
             Button(action: action) {
                 HStack(spacing: 9) {
-                    Image(systemName: icon)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(iconColor)
-                        .scaleEffect(iconScale)
-                        .frame(width: 24)
+                    Group {
+                        if usesClosedLidIcon {
+                            ClosedLidMacBookIcon(isClosed: isEnabled, color: iconColor)
+                        } else {
+                            Image(systemName: icon)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(iconColor)
+                                .scaleEffect(iconScale)
+                                .frame(width: 24)
+                        }
+                    }
 
                     Text(title)
                         .font(.system(size: 13, weight: .semibold))
@@ -266,6 +297,7 @@ private struct MenuToggleRow: View {
             }
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity)
+            .help(tooltip)
 
             if isDimDelayAvailable, let selectedDimDelayMinutes, let dimDelayAction {
                 MenuDimDelayButton(
@@ -281,6 +313,7 @@ private struct MenuToggleRow: View {
                 AwakeSwitch(isEnabled: isEnabled)
             }
             .buttonStyle(.plain)
+            .help("Turn \(title) \(isEnabled ? "off" : "on").")
         }
         .padding(.horizontal, 9)
         .frame(height: 36)
@@ -292,9 +325,45 @@ private struct MenuToggleRow: View {
     }
 }
 
+private struct ClosedLidMacBookIcon: View {
+    let isClosed: Bool
+    let color: Color
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 1.2, style: .continuous)
+                .fill(color)
+                .frame(width: 20, height: 2.2)
+                .offset(y: 6)
+
+            RoundedRectangle(cornerRadius: 1.4, style: .continuous)
+                .stroke(color, lineWidth: 1.4)
+                .frame(width: 18.6, height: 2.5)
+                .scaleEffect(y: isClosed ? 1 : 0.2, anchor: .bottom)
+                .offset(y: 3.5)
+                .opacity(isClosed ? 1 : 0)
+
+            RoundedRectangle(cornerRadius: 1.7, style: .continuous)
+                .stroke(color, lineWidth: 1.7)
+                .frame(width: 14, height: 11)
+                .scaleEffect(
+                    x: isClosed ? 1.28 : 1,
+                    y: isClosed ? 0.01 : 1,
+                    anchor: .bottom
+                )
+                .offset(y: isClosed ? 6 : -2)
+                .opacity(isClosed ? 0 : 1)
+        }
+        .frame(width: 24, height: 20)
+        .animation(.spring(response: 0.42, dampingFraction: 0.72), value: isClosed)
+        .accessibilityLabel(isClosed ? "Closed MacBook" : "Open MacBook")
+    }
+}
+
 private struct MenuLockSleepRow: View {
     let isEnabled: Bool
     let toggleAction: () -> Void
+    let tooltip: String
     let lockAction: () -> Void
 
     var body: some View {
@@ -306,7 +375,7 @@ private struct MenuLockSleepRow: View {
                         .foregroundStyle(iconColor)
                         .frame(width: 24)
 
-                    Text("Lock & Sleep")
+                    Text("Allow Lock & Sleep")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
@@ -318,6 +387,7 @@ private struct MenuLockSleepRow: View {
             }
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity)
+            .help(tooltip)
 
             if isEnabled {
                 Button(action: lockAction) {
@@ -329,6 +399,7 @@ private struct MenuLockSleepRow: View {
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .help("Lock your screen now.")
                 .transition(.scale.combined(with: .opacity))
             }
 
@@ -336,6 +407,7 @@ private struct MenuLockSleepRow: View {
                 AwakeSwitch(isEnabled: isEnabled)
             }
             .buttonStyle(.plain)
+            .help("Turn Allow Lock & Sleep \(isEnabled ? "off" : "on").")
         }
         .padding(.horizontal, 9)
         .frame(height: 36)
@@ -356,21 +428,13 @@ private struct MenuDimDelayButton: View {
 
     var body: some View {
         Menu {
-            Text("Built-in display dim timer")
-
-            Divider()
-
-            ForEach(options, id: \.self) { minutes in
-                Button(action: { action(minutes) }) {
-                    HStack {
-                        Text(DisplayDimDelayFormatter.optionLabel(for: minutes))
-
-                        if minutes == selectedMinutes {
-                            Image(systemName: "checkmark")
-                        }
-                    }
+            Picker("Built-in display dim timer", selection: selection) {
+                ForEach(options, id: \.self) { minutes in
+                    Text(DisplayDimDelayFormatter.optionLabel(for: minutes))
+                        .tag(minutes)
                 }
             }
+            .pickerStyle(.inline)
         } label: {
             Image(systemName: "timer")
                 .font(.system(size: 12, weight: .bold))
@@ -383,10 +447,18 @@ private struct MenuDimDelayButton: View {
         .menuStyle(.button)
         .disabled(!isAvailable)
         .opacity(isAvailable ? 1 : 0.42)
+        .help("Choose when to dim the built-in display while keeping your Mac awake.")
     }
 
     private var iconColor: Color {
         isActive ? Color(red: 1.0, green: 0.62, blue: 0.52) : .white.opacity(0.72)
+    }
+
+    private var selection: Binding<Int> {
+        Binding(
+            get: { selectedMinutes },
+            set: action
+        )
     }
 }
 
@@ -450,6 +522,7 @@ private struct MenuActionRow: View {
     let icon: String
     var iconRotation = 0.0
     var trailingText = ""
+    let tooltip: String
     let action: () -> Void
     @State private var isHovered = false
 
@@ -483,6 +556,7 @@ private struct MenuActionRow: View {
         }
         .buttonStyle(.plain)
         .onHover { isHovered = $0 }
+        .help(tooltip)
     }
 }
 
@@ -493,7 +567,9 @@ private struct MenuTimerRow: View {
     let selectedMinutes: Int
     let remainingSeconds: Int
     let options: [Int]
+    let tooltip: String
     let action: (Int) -> Void
+    @State private var isTimerMenuExpanded = false
 
     private var hasActiveTimer: Bool {
         selectedMinutes > 0
@@ -501,17 +577,18 @@ private struct MenuTimerRow: View {
 
     var body: some View {
         Menu {
-            ForEach(options, id: \.self) { minutes in
-                Button(action: { action(minutes) }) {
-                    HStack {
-                        Text(self.optionLabel(for: minutes))
+            Picker("Auto Turn Off", selection: selection) {
+                if !options.contains(selectedMinutes) {
+                    Text("Extended — \(optionLabel(for: selectedMinutes))")
+                        .tag(selectedMinutes)
+                }
 
-                        if minutes == selectedMinutes {
-                            Image(systemName: "checkmark")
-                        }
-                    }
+                ForEach(options, id: \.self) { minutes in
+                    Text(optionLabel(for: minutes))
+                        .tag(minutes)
                 }
             }
+            .pickerStyle(.inline)
         } label: {
             HStack(spacing: 9) {
                 Image(systemName: icon)
@@ -536,6 +613,8 @@ private struct MenuTimerRow: View {
                 Image(systemName: "chevron.down")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(.white.opacity(0.60))
+                    .rotationEffect(.degrees(isTimerMenuExpanded ? 180 : 0))
+                    .animation(.easeInOut(duration: 0.16), value: isTimerMenuExpanded)
             }
             .padding(.horizontal, 9)
             .frame(height: 32)
@@ -543,6 +622,8 @@ private struct MenuTimerRow: View {
         .buttonStyle(.plain)
         .menuStyle(.button)
         .fixedSize(horizontal: false, vertical: true)
+        .background(TimerMenuOpenStateTracker(isExpanded: $isTimerMenuExpanded))
+        .help(tooltip)
     }
 
     private var statusLabel: String {
@@ -563,6 +644,87 @@ private struct MenuTimerRow: View {
 
     private func countdownLabel(for seconds: Int) -> String {
         AutoTurnOffFormatter.countdownLabel(for: seconds)
+    }
+
+    private var selection: Binding<Int> {
+        Binding(
+            get: { selectedMinutes },
+            set: action
+        )
+    }
+
+}
+
+private struct TimerMenuOpenStateTracker: NSViewRepresentable {
+    @Binding var isExpanded: Bool
+
+    func makeNSView(context: Context) -> NSView {
+        NSView(frame: .zero)
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        context.coordinator.isExpanded = $isExpanded
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(isExpanded: $isExpanded)
+    }
+
+    final class Coordinator {
+        var isExpanded: Binding<Bool>
+        private weak var activeMenu: NSMenu?
+        private var beginObserver: NSObjectProtocol?
+        private var endObserver: NSObjectProtocol?
+
+        init(isExpanded: Binding<Bool>) {
+            self.isExpanded = isExpanded
+
+            beginObserver = NotificationCenter.default.addObserver(
+                forName: NSMenu.didBeginTrackingNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                guard let self,
+                      let menu = notification.object as? NSMenu,
+                      Self.isAutoTurnOffMenu(menu)
+                else {
+                    return
+                }
+
+                self.activeMenu = menu
+                self.isExpanded.wrappedValue = true
+            }
+
+            endObserver = NotificationCenter.default.addObserver(
+                forName: NSMenu.didEndTrackingNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                guard let self,
+                      let menu = notification.object as? NSMenu,
+                      menu === self.activeMenu
+                else {
+                    return
+                }
+
+                self.activeMenu = nil
+                self.isExpanded.wrappedValue = false
+            }
+        }
+
+        deinit {
+            if let beginObserver {
+                NotificationCenter.default.removeObserver(beginObserver)
+            }
+            if let endObserver {
+                NotificationCenter.default.removeObserver(endObserver)
+            }
+        }
+
+        private static func isAutoTurnOffMenu(_ menu: NSMenu) -> Bool {
+            let titles = Set(menu.items.map(\.title))
+            return titles.contains("Infinity") && titles.contains("After 30 min")
+        }
     }
 }
 

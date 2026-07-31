@@ -15,6 +15,7 @@ import IOKit.ps
 final class AwakeController: ObservableObject {
     @Published private(set) var keepAwakeEnabled = false
     @Published private(set) var allowLockAndSleepEnabled = false
+    @Published private(set) var allowClosedLidEnabled = false
     @Published private(set) var keepAwakeOffTimerMinutes = 0
     @Published private(set) var keepAwakeRemainingSeconds = 0
     @Published private(set) var displayDimDelayMinutes = 1
@@ -26,18 +27,25 @@ final class AwakeController: ObservableObject {
 
     private let keepAwakeDefaultsKey = "keepAwakeEnabled"
     private let allowLockAndSleepDefaultsKey = "allowLockAndSleepEnabled"
+    private let allowClosedLidDefaultsKey = "allowClosedLidEnabled"
     private let keepAwakeOffTimerDefaultsKey = "keepAwakeOffTimerMinutes"
+    private let keepAwakeOffTimerEndDateDefaultsKey = "keepAwakeOffTimerEndDate"
     private let displayDimDelayDefaultsKey = "displayDimDelayMinutes"
     private let lowBatteryThreshold = 10
     private let displayActivityPollInterval: TimeInterval = 0.5
     private let displayActivityRestoreIdleThreshold: TimeInterval = 1.5
     private let displayDimMinimumRescheduleDelay: TimeInterval = 0.5
+    private let displayDimTestStartDelay: TimeInterval = 0.75
+    private let displayDimTestDuration: TimeInterval = 10
     static let offTimerOptions = [0, 30, 60, 120, 180, 240, 360, 480, 720]
     static let displayDimDelayOptions = [0, 1, 5, 15, 30]
     private var assertionIDs: [IOPMAssertionID] = []
     private var offTimer: Timer?
+    private var keepAwakeOffTimerEndDate: Date?
     private var batteryMonitorTimer: Timer?
     private var displayDimTimer: Timer?
+    private var displayDimTestStartTimer: Timer?
+    private var displayDimTestTimer: Timer?
     private var displayActivityTimer: Timer?
     private var displayActivityObservers: [Any] = []
     private var builtInDimOverlayWindows: [NSWindow] = []
@@ -47,6 +55,17 @@ final class AwakeController: ObservableObject {
         BatteryProtectionPolicy(lowBatteryThreshold: lowBatteryThreshold)
     }
     private let assertionPolicy = AwakeAssertionPolicy()
+    private let autoOffDeadlinePolicy = AutoOffDeadlinePolicy()
+    private lazy var autoOffNotificationController: AutoOffNotificationController = {
+        let controller = AutoOffNotificationController()
+        controller.onExtend = { [weak self] in
+            self?.extendKeepAwakeSession(by: 30 * 60)
+        }
+        controller.onStop = { [weak self] in
+            _ = self?.setKeepAwakeEnabled(false)
+        }
+        return controller
+    }()
     private var displayDimDelay: TimeInterval {
         TimeInterval(displayDimDelayMinutes * 60)
     }
@@ -61,12 +80,19 @@ final class AwakeController: ObservableObject {
     init() {
         keepAwakeEnabled = UserDefaults.standard.bool(forKey: keepAwakeDefaultsKey)
         allowLockAndSleepEnabled = UserDefaults.standard.bool(forKey: allowLockAndSleepDefaultsKey)
+        allowClosedLidEnabled = UserDefaults.standard.bool(forKey: allowClosedLidDefaultsKey)
         keepAwakeOffTimerMinutes = UserDefaults.standard.integer(forKey: keepAwakeOffTimerDefaultsKey)
+        keepAwakeOffTimerEndDate = Self.initialOffTimerEndDate(
+            defaults: UserDefaults.standard,
+            key: keepAwakeOffTimerEndDateDefaultsKey
+        )
         displayDimDelayMinutes = Self.initialDisplayDimDelayMinutes(
             defaults: UserDefaults.standard,
             key: displayDimDelayDefaultsKey
         )
         recoverDisplayTransferSettingsFromPreviousDimmer()
+        normalizeExpiredOffTimerSession()
+        autoOffNotificationController.configure()
         startAppObservers()
         _ = updateAssertions()
     }
@@ -91,13 +117,23 @@ final class AwakeController: ObservableObject {
         return updateAssertions()
     }
 
+    @discardableResult
+    func setAllowClosedLidEnabled(_ isEnabled: Bool) -> Bool {
+        allowClosedLidEnabled = isEnabled
+        UserDefaults.standard.set(isEnabled, forKey: allowClosedLidDefaultsKey)
+        return updateAssertions()
+    }
+
     func setKeepAwakeOffTimerMinutes(_ minutes: Int) {
         let clampedMinutes = max(0, minutes)
         keepAwakeOffTimerMinutes = clampedMinutes
         UserDefaults.standard.set(clampedMinutes, forKey: keepAwakeOffTimerDefaultsKey)
 
         if keepAwakeEnabled {
+            setOffTimerEndDate(autoOffDeadlinePolicy.endDate(startingAt: Date(), minutes: clampedMinutes))
             scheduleOffTimer()
+        } else {
+            setOffTimerEndDate(nil)
         }
     }
 
@@ -116,11 +152,34 @@ final class AwakeController: ObservableObject {
         }
     }
 
+    func showDisplayDimOverlayForTesting() {
+        cancelDisplayDimTest()
+        stopDisplayActivityMonitor()
+
+        displayDimTestStartTimer = Timer.scheduledTimer(
+            withTimeInterval: displayDimTestStartDelay,
+            repeats: false
+        ) { [weak self] _ in
+            guard let self else {
+                return
+            }
+
+            self.showBuiltInDisplayDimOverlay()
+            self.displayDimTestTimer = Timer.scheduledTimer(
+                withTimeInterval: self.displayDimTestDuration,
+                repeats: false
+            ) { [weak self] _ in
+                self?.hideBuiltInDisplayDimOverlay()
+            }
+        }
+    }
+
     func shutdown() {
         releaseAssertions()
         cancelOffTimer()
         stopBatteryMonitor()
         cancelDisplayDimTimer(restoreBrightness: true)
+        cancelDisplayDimTest()
     }
 
     private func updateAssertions() -> Bool {
@@ -174,10 +233,21 @@ final class AwakeController: ObservableObject {
         return normalizedDisplayDimDelayMinutes(defaults.integer(forKey: key))
     }
 
+    private static func initialOffTimerEndDate(defaults: UserDefaults, key: String) -> Date? {
+        guard let timestamp = defaults.object(forKey: key) as? TimeInterval else {
+            return nil
+        }
+
+        return Date(timeIntervalSince1970: timestamp)
+    }
+
     private func createAssertions() -> Bool {
         releaseAssertions()
 
-        let activeAssertions = assertionPolicy.activeAssertions(allowLockAndSleepEnabled: allowLockAndSleepEnabled)
+        let activeAssertions = assertionPolicy.activeAssertions(
+            allowLockAndSleepEnabled: allowLockAndSleepEnabled,
+            allowClosedLidEnabled: allowClosedLidEnabled
+        )
 
         for assertion in activeAssertions {
             var assertionID = IOPMAssertionID(0)
@@ -210,11 +280,27 @@ final class AwakeController: ObservableObject {
         cancelOffTimer()
 
         guard keepAwakeEnabled, keepAwakeOffTimerMinutes > 0 else {
+            setOffTimerEndDate(nil)
             keepAwakeRemainingSeconds = 0
             return
         }
 
-        keepAwakeRemainingSeconds = keepAwakeOffTimerMinutes * 60
+        if keepAwakeOffTimerEndDate == nil {
+            setOffTimerEndDate(autoOffDeadlinePolicy.endDate(startingAt: Date(), minutes: keepAwakeOffTimerMinutes))
+        }
+
+        guard let keepAwakeOffTimerEndDate else {
+            return
+        }
+
+        guard refreshOffTimerRemainingSeconds(until: keepAwakeOffTimerEndDate) else {
+            return
+        }
+
+        if let warningDelay = autoOffDeadlinePolicy.warningDelay(until: keepAwakeOffTimerEndDate, now: Date()) {
+            autoOffNotificationController.scheduleWarning(after: warningDelay)
+        }
+
         offTimer = Timer.scheduledTimer(
             withTimeInterval: 1,
             repeats: true
@@ -223,11 +309,7 @@ final class AwakeController: ObservableObject {
                 return
             }
 
-            self.keepAwakeRemainingSeconds -= 1
-
-            if self.keepAwakeRemainingSeconds <= 0 {
-                _ = self.setKeepAwakeEnabled(false)
-            }
+            _ = self.refreshOffTimerRemainingSeconds(until: keepAwakeOffTimerEndDate)
         }
     }
 
@@ -235,6 +317,63 @@ final class AwakeController: ObservableObject {
         offTimer?.invalidate()
         offTimer = nil
         keepAwakeRemainingSeconds = 0
+        autoOffNotificationController.cancelWarning()
+    }
+
+    private func refreshOffTimerRemainingSeconds(until endDate: Date) -> Bool {
+        let remainingSeconds = autoOffDeadlinePolicy.remainingSeconds(until: endDate, now: Date())
+        keepAwakeRemainingSeconds = remainingSeconds
+
+        guard remainingSeconds > 0 else {
+            _ = setKeepAwakeEnabled(false)
+            return false
+        }
+
+        return true
+    }
+
+    private func extendKeepAwakeSession(by seconds: TimeInterval) {
+        guard keepAwakeEnabled else {
+            return
+        }
+
+        let endDate = autoOffDeadlinePolicy.extending(
+            endDate: keepAwakeOffTimerEndDate,
+            by: seconds,
+            now: Date()
+        )
+        setOffTimerEndDate(endDate)
+        keepAwakeOffTimerMinutes = max(1, Int(ceil(endDate.timeIntervalSinceNow / 60)))
+        UserDefaults.standard.set(keepAwakeOffTimerMinutes, forKey: keepAwakeOffTimerDefaultsKey)
+        scheduleOffTimer()
+    }
+
+    private func setOffTimerEndDate(_ endDate: Date?) {
+        keepAwakeOffTimerEndDate = endDate
+
+        if let endDate {
+            UserDefaults.standard.set(endDate.timeIntervalSince1970, forKey: keepAwakeOffTimerEndDateDefaultsKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: keepAwakeOffTimerEndDateDefaultsKey)
+        }
+    }
+
+    private func normalizeExpiredOffTimerSession() {
+        guard let keepAwakeOffTimerEndDate else {
+            return
+        }
+
+        guard keepAwakeOffTimerEndDate > Date() else {
+            keepAwakeEnabled = false
+            UserDefaults.standard.set(false, forKey: keepAwakeDefaultsKey)
+            setOffTimerEndDate(nil)
+            return
+        }
+
+        guard keepAwakeEnabled else {
+            setOffTimerEndDate(nil)
+            return
+        }
     }
 
     private func updateDisplayDimming() {
@@ -267,6 +406,14 @@ final class AwakeController: ObservableObject {
         if restoreBrightness {
             restoreDisplayBrightness()
         }
+    }
+
+    private func cancelDisplayDimTest() {
+        displayDimTestStartTimer?.invalidate()
+        displayDimTestStartTimer = nil
+        displayDimTestTimer?.invalidate()
+        displayDimTestTimer = nil
+        hideBuiltInDisplayDimOverlay()
     }
 
     private func dimDisplays() {
@@ -454,30 +601,11 @@ final class AwakeController: ObservableObject {
     }
 
     private func dimOverlayContentView(frame: NSRect) -> NSView {
-        let contentView = NSView(frame: frame)
-        contentView.wantsLayer = true
-        contentView.layer?.backgroundColor = NSColor.clear.cgColor
-
         guard let logoImage = NSImage(named: "WelcomeLogo") else {
-            return contentView
+            return NSView(frame: frame)
         }
 
-        let logoView = NSImageView(image: logoImage)
-        logoView.translatesAutoresizingMaskIntoConstraints = false
-        logoView.imageScaling = .scaleProportionallyUpOrDown
-        logoView.alphaValue = 0.88
-
-        contentView.addSubview(logoView)
-
-        NSLayoutConstraint.activate([
-            logoView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            logoView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            logoView.widthAnchor.constraint(lessThanOrEqualTo: contentView.widthAnchor, multiplier: 0.21),
-            logoView.heightAnchor.constraint(equalTo: logoView.widthAnchor, multiplier: logoImage.size.height / logoImage.size.width),
-            logoView.heightAnchor.constraint(lessThanOrEqualToConstant: 41)
-        ])
-
-        return contentView
+        return DimOverlayContentView(frame: frame, logoImage: logoImage)
     }
 
     private func hideBuiltInDisplayDimOverlay() {
@@ -650,5 +778,77 @@ final class AwakeController: ObservableObject {
         }
 
         return nil
+    }
+}
+
+private final class DimOverlayContentView: NSView {
+    private let clockLabel = NSTextField(labelWithString: "")
+    private var clockTimer: Timer?
+
+    init(frame frameRect: NSRect, logoImage: NSImage) {
+        super.init(frame: frameRect)
+
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.clear.cgColor
+
+        let logoView = NSImageView(image: logoImage)
+        logoView.imageScaling = .scaleProportionallyUpOrDown
+        logoView.alphaValue = 0.88
+
+        clockLabel.alignment = .center
+        clockLabel.textColor = NSColor.white.withAlphaComponent(0.62)
+        clockLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 16, weight: .light)
+        clockLabel.lineBreakMode = .byClipping
+
+        let contentStack = NSStackView(views: [logoView, clockLabel])
+        contentStack.orientation = .vertical
+        contentStack.alignment = .centerX
+        contentStack.spacing = 18
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(contentStack)
+
+        logoView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            contentStack.centerXAnchor.constraint(equalTo: centerXAnchor),
+            contentStack.centerYAnchor.constraint(equalTo: centerYAnchor),
+            logoView.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, multiplier: 0.21),
+            logoView.heightAnchor.constraint(equalTo: logoView.widthAnchor, multiplier: logoImage.size.height / logoImage.size.width),
+            logoView.heightAnchor.constraint(lessThanOrEqualToConstant: 41)
+        ])
+
+        updateClock()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+
+        clockTimer?.invalidate()
+        clockTimer = nil
+
+        guard window != nil else {
+            return
+        }
+
+        let timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            self?.updateClock()
+        }
+        clockTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    deinit {
+        clockTimer?.invalidate()
+    }
+
+    private func updateClock() {
+        let formatter = DateFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        clockLabel.stringValue = formatter.string(from: Date())
     }
 }

@@ -31,8 +31,17 @@ struct AwakeAssertionPolicy {
         )
     ]
 
-    func activeAssertions(allowLockAndSleepEnabled: Bool) -> [AwakePowerAssertion] {
-        allowLockAndSleepEnabled ? systemAssertions : systemAssertions + displayAssertions
+    private let closedLidAssertion = AwakePowerAssertion(
+        type: "PreventSystemSleep",
+        reason: "Code Awake - Best-effort closed lid mode"
+    )
+
+    func activeAssertions(
+        allowLockAndSleepEnabled: Bool,
+        allowClosedLidEnabled: Bool = false
+    ) -> [AwakePowerAssertion] {
+        let baseAssertions = allowLockAndSleepEnabled ? systemAssertions : systemAssertions + displayAssertions
+        return allowClosedLidEnabled ? baseAssertions + [closedLidAssertion] : baseAssertions
     }
 }
 
@@ -95,6 +104,31 @@ struct DisplayDimPolicy {
         }
 
         return currentIdleTime <= activityRestoreIdleThreshold
+    }
+}
+
+struct AutoOffDeadlinePolicy {
+    let notificationLeadTime: TimeInterval = 5 * 60
+
+    func endDate(startingAt date: Date, minutes: Int) -> Date? {
+        guard minutes > 0 else {
+            return nil
+        }
+
+        return date.addingTimeInterval(TimeInterval(minutes * 60))
+    }
+
+    func remainingSeconds(until endDate: Date, now: Date) -> Int {
+        max(0, Int(ceil(endDate.timeIntervalSince(now))))
+    }
+
+    func warningDelay(until endDate: Date, now: Date) -> TimeInterval? {
+        let delay = endDate.timeIntervalSince(now) - notificationLeadTime
+        return delay > 0 ? delay : nil
+    }
+
+    func extending(endDate: Date?, by seconds: TimeInterval, now: Date) -> Date {
+        max(endDate ?? now, now).addingTimeInterval(seconds)
     }
 }
 
