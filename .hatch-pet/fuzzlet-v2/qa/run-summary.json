@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "spriteVersionNumber": 2,
+  "run_dir": "/Users/artsvit/Develop/Code Awake/.hatch-pet/fuzzlet-v2",
+  "spritesheet": "/Users/artsvit/Develop/Code Awake/.hatch-pet/fuzzlet-v2/final/spritesheet-extended.webp",
+  "validation": "/Users/artsvit/Develop/Code Awake/.hatch-pet/fuzzlet-v2/final/validation-extended.json",
+  "chroma_despill": "/Users/artsvit/Develop/Code Awake/.hatch-pet/fuzzlet-v2/qa/chroma-despill-extended.json",
+  "contact_sheet": "/Users/artsvit/Develop/Code Awake/.hatch-pet/fuzzlet-v2/qa/contact-sheet-extended.png",
+  "direction_sheet": "/Users/artsvit/Develop/Code Awake/.hatch-pet/fuzzlet-v2/qa/look-directions.png",
+  "direction_semantics": "/Users/artsvit/Develop/Code Awake/.hatch-pet/fuzzlet-v2/qa/direction-semantics.json",
+  "blind_direction_validation": "/Users/artsvit/Develop/Code Awake/.hatch-pet/fuzzlet-v2/qa/direction-blind-validation.json",
+  "blind_review_resolution": "/Users/artsvit/Develop/Code Awake/.hatch-pet/fuzzlet-v2/qa/blind-review-resolution.json",
+  "continuity": "/Users/artsvit/Develop/Code Awake/.hatch-pet/fuzzlet-v2/qa/look-continuity.json",
+  "review": "/Users/artsvit/Develop/Code Awake/.hatch-pet/fuzzlet-v2/qa/review.json",
+  "package": "/Users/artsvit/.codex/pets/fuzzlet"
+}
